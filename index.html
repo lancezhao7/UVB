@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Evoke WPC · UV板报价计算器</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
+  :root{--bg:#0e0f11;--surface:#16181c;--surface2:#1e2026;--border:#2a2d35;--accent:#c8f135;--accent2:#4af0c4;--text:#e8eaf0;--muted:#6b7080;--danger:#ff5f5f;--warn:#f0c040;--radius:12px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;padding:24px 16px 48px;}
+  .header{display:flex;align-items:baseline;gap:12px;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);max-width:860px;margin-left:auto;margin-right:auto;}
+  .header-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--accent);letter-spacing:-0.5px;}
+  .header-sub{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:860px;margin:0 auto;}
+  @media(max-width:640px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+  .card+.card{margin-top:14px;}
+  .card-title{font-family:'Syne',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:0.5px;}
+  .field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:9px 12px;outline:none;transition:border-color 0.15s;appearance:none;-webkit-appearance:none;}
+  .field input:focus{border-color:var(--accent);}
+  /* UV */
+  .uv-len-group{display:flex;gap:6px;margin-bottom:10px;}
+  .uv-len-btn{flex:1;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--border);font-size:13px;cursor:pointer;background:var(--surface2);color:var(--muted);transition:all 0.15s;}
+  .uv-len-btn.active{border-color:var(--accent2);color:var(--accent2);background:#0d201a;}
+  .uv-matrix{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px;}
+  .uv-cell{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;transition:all 0.15s;}
+  .uv-cell:hover{border-color:var(--muted);}
+  .uv-cell.active{border-color:var(--accent);background:#141a05;}
+  .uv-cell .uv-thick{font-size:14px;color:var(--text);font-weight:500;}
+  .uv-cell .uv-price{font-size:10px;color:var(--muted);margin-top:3px;}
+  .uv-cell.active .uv-price{color:var(--accent);}
+  .film-group{display:flex;gap:6px;}
+  .film-btn{flex:1;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--surface2);color:var(--muted);transition:all 0.15s;}
+  .film-btn.active{border-color:#f0c040;color:#f0c040;background:#1a1800;}
+  /* 贴退税 slider */
+  .rebate-row{display:flex;align-items:center;gap:10px;}
+  .rebate-row input[type="range"]{flex:1;-webkit-appearance:none;appearance:none;height:4px;background:var(--surface2);border-radius:99px;outline:none;border:1px solid var(--border);padding:0;}
+  .rebate-row input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--warn);cursor:pointer;border:2px solid var(--bg);}
+  .rebate-row input[type="range"]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--warn);cursor:pointer;border:2px solid var(--bg);}
+  .rebate-pct{min-width:48px;text-align:right;font-size:14px;color:var(--warn);font-weight:500;}
+  .rebate-quick{display:flex;gap:4px;margin-top:8px;}
+  .rebate-quick-btn{flex:1;padding:5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.15s;}
+  .rebate-quick-btn:hover{border-color:var(--warn);color:var(--warn);}
+  .rebate-quick-btn.active{background:#1a1800;border-color:var(--warn);color:var(--warn);}
+  /* specs */
+  .specs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;}
+  .spec-item{background:var(--surface2);border-radius:8px;padding:8px 10px;}
+  .spec-label{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+  .spec-val{font-size:13px;color:var(--text);}
+  /* kpi */
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .kpi-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+  .kpi-item.hl{border-color:var(--accent);background:#141a05;}
+  .kpi-item.hl2{border-color:var(--accent2);background:#081510;}
+  .kpi-item.warn{border-color:var(--warn);background:#1a1800;}
+  .kpi-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .kpi-value{font-size:20px;font-weight:500;color:var(--text);letter-spacing:-0.5px;}
+  .kpi-item.hl .kpi-value{color:var(--accent);}
+  .kpi-item.hl2 .kpi-value{color:var(--accent2);}
+  .kpi-item.warn .kpi-value{color:var(--warn);}
+  .kpi-unit{font-size:11px;color:var(--muted);margin-left:3px;}
+  .kpi-strike{text-decoration:line-through;color:var(--muted);font-size:11px;margin-right:5px;}
+  .profit-bar-wrap{margin-top:10px;}
+  .profit-bar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px;}
+  .profit-bar-track{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;}
+  .profit-bar-fill{height:100%;border-radius:99px;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);width:0%;}
+  .profit-bar-fill.good{background:var(--accent);}
+  .profit-bar-fill.ok{background:#f0c040;}
+  .profit-bar-fill.low{background:var(--danger);}
+  .divider{height:1px;background:var(--border);margin:14px 0;}
+  .note-strip{font-size:11px;color:var(--muted);background:var(--surface2);border-radius:8px;padding:10px 12px;line-height:1.6;border-left:2px solid var(--border);}
+  .calc-btn{width:100%;padding:13px;background:var(--accent);color:#0e0f11;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:opacity 0.15s,transform 0.1s;}
+  .calc-btn:hover{opacity:0.9;}
+  .calc-btn:active{transform:scale(0.98);}
+  .tag-auto{display:inline-block;font-size:9px;background:#1a2a0a;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 5px;margin-left:6px;letter-spacing:1px;vertical-align:middle;}
+  .mt{margin-top:14px;}
+</style>
+</head>
+<body>
+<div style="max-width:860px;margin:0 auto;">
+  <div class="header">
+    <span class="header-brand">EVOKE WPC</span>
+    <span class="header-sub">UV板报价计算器 v1.0</span>
+  </div>
+
+  <div class="grid">
+    <!-- 左列 -->
+    <div>
+
+      <!-- UV 规格 -->
+      <div class="card">
+        <div class="card-title">UV 规格 <span class="tag-auto">AUTO-FILL</span></div>
+        <div class="field">
+          <label>长度</label>
+          <div class="uv-len-group" id="uvLenGroup">
+            <div class="uv-len-btn active" data-len="2.44">2.44m</div>
+            <div class="uv-len-btn" data-len="2.80">2.80m</div>
+            <div class="uv-len-btn" data-len="2.90">2.90m</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>厚度（含税采购价/张）</label>
+          <div class="uv-matrix" id="uvMatrix"></div>
+        </div>
+        <div class="field mt">
+          <label>膜纸</label>
+          <div class="film-group">
+            <div class="film-btn active" data-film="normal">普通</div>
+            <div class="film-btn" data-film="gilded">鎏金 +¥3.5/m</div>
+          </div>
+        </div>
+        <div class="specs-row mt">
+          <div class="spec-item"><div class="spec-label">长度</div><div class="spec-val" id="uv_s_len">—</div></div>
+          <div class="spec-item"><div class="spec-label">厚度</div><div class="spec-val" id="uv_s_thk">—</div></div>
+          <div class="spec-item"><div class="spec-label">采购价/张</div><div class="spec-val" id="uv_s_price">—</div></div>
+          <div class="spec-item"><div class="spec-label">装柜(20GP)</div><div class="spec-val" id="uv_s_qty">—</div></div>
+        </div>
+      </div>
+
+      <!-- 价格参数 -->
+      <div class="card mt">
+        <div class="card-title">价格参数</div>
+        <div class="field"><label>含税出厂价 (RMB/张)</label><input id="exTax" value="0"/></div>
+        <div class="field"><label>报价利润点 %</label><input id="margin" value="15"/></div>
+        <div class="field"><label>汇率 (RMB/USD)</label><input id="fx" value="7.25"/></div>
+        <div class="field"><label>港杂费 (RMB)</label><input id="portFee" value="5000"/></div>
+        <div class="field"><label>托盘费 (RMB)</label><input id="palletFee" value="1440"/></div>
+      </div>
+
+      <!-- 贴退税 -->
+      <div class="card mt">
+        <div class="card-title">贴退税成交</div>
+        <div class="field">
+          <label>让利比例（贴出去的退税占退税总额的百分比）</label>
+          <div class="rebate-row">
+            <input type="range" id="rebateSlider" min="0" max="100" step="5" value="0"/>
+            <span class="rebate-pct" id="rebatePctLabel">0%</span>
+          </div>
+          <div class="rebate-quick">
+            <div class="rebate-quick-btn active" data-pct="0">不贴</div>
+            <div class="rebate-quick-btn" data-pct="30">贴30%</div>
+            <div class="rebate-quick-btn" data-pct="50">贴50%</div>
+            <div class="rebate-quick-btn" data-pct="80">贴80%</div>
+            <div class="rebate-quick-btn" data-pct="100">全贴</div>
+          </div>
+        </div>
+        <div class="note-strip">把退税让一部分给客户以降低 FOB 报价，方便压价成交。真实利润仍按"贴让后报价利润 + 留存退税"计算。</div>
+      </div>
+
+      <div class="mt"><button class="calc-btn" id="btn">CALCULATE</button></div>
+    </div>
+
+    <!-- 右列：结果 -->
+    <div>
+      <div class="card">
+        <div class="card-title">装柜结果</div>
+        <div class="kpi-grid">
+          <div class="kpi-item hl">
+            <div class="kpi-label">装柜张数</div>
+            <div class="kpi-value" id="metersOut">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">柜型</div>
+            <div class="kpi-value" style="font-size:16px;">20GP</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt">
+        <div class="card-title">FOB 报价</div>
+        <div class="kpi-grid">
+          <div class="kpi-item hl">
+            <div class="kpi-label">FOB 单价 USD</div>
+            <div class="kpi-value" id="fobUsdUnit">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">FOB 单价 RMB</div>
+            <div class="kpi-value" id="fobRmbUnit">—</div>
+          </div>
+          <div class="kpi-item hl2">
+            <div class="kpi-label">FOB 总额 USD</div>
+            <div class="kpi-value" id="fobUsdTotal">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">FOB 总额 RMB</div>
+            <div class="kpi-value" id="fobRmbTotal">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt">
+        <div class="card-title">利润分析</div>
+        <div class="kpi-grid">
+          <div class="kpi-item"><div class="kpi-label">成本 RMB</div><div class="kpi-value" id="costOut">—</div></div>
+          <div class="kpi-item"><div class="kpi-label">退税 RMB</div><div class="kpi-value" id="rebateOut">—</div></div>
+          <div class="kpi-item"><div class="kpi-label">报价利润</div><div class="kpi-value" id="profitOut">—</div></div>
+          <div class="kpi-item"><div class="kpi-label">真实利润</div><div class="kpi-value" id="realProfitOut">—</div></div>
+        </div>
+        <div class="kpi-grid mt">
+          <div class="kpi-item warn">
+            <div class="kpi-label">贴出去的退税</div>
+            <div class="kpi-value" id="rebateGivenOut">—</div>
+          </div>
+          <div class="kpi-item warn">
+            <div class="kpi-label">留存退税</div>
+            <div class="kpi-value" id="rebateKeptOut">—</div>
+          </div>
+        </div>
+        <div class="profit-bar-wrap">
+          <div class="profit-bar-label"><span>真实利润率</span><span id="realRateOut">—%</span></div>
+          <div class="profit-bar-track"><div class="profit-bar-fill" id="profitBar"></div></div>
+        </div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:var(--muted);">提成 (15%)</span>
+          <span style="font-size:16px;color:var(--accent2);" id="commOut">—</span>
+        </div>
+      </div>
+
+      <div class="note-strip mt" id="noteStrip">选择规格并点击 CALCULATE</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const UV_DATA={
+  "2.44_2.0":{price:41.52,qty:2300},"2.44_2.5":{price:48.47,qty:1800},
+  "2.44_2.8":{price:52.75,qty:1600},"2.44_3.0":{price:55.43,qty:1500},
+  "2.80_2.0":{price:47.94,qty:2000},"2.80_2.5":{price:55.43,qty:1600},
+  "2.80_2.8":{price:60.24,qty:1400},"2.80_3.0":{price:63.45,qty:1300},
+  "2.90_2.0":{price:49.01,qty:1900},"2.90_2.5":{price:58.10,qty:1500},
+  "2.90_2.8":{price:62.92,qty:1300},"2.90_3.0":{price:66.13,qty:1200}
+};
+
+const COMM=0.15;
+let uvLen="2.44",uvThk="2.0",uvFilm="normal",rebatePct=0;
+
+const $=id=>document.getElementById(id);
+const f2=x=>(+x).toFixed(2);
+const fmtN=x=>{const n=+x;if(!isFinite(n))return"—";return Math.abs(n)>=10000?n.toLocaleString('zh',{maximumFractionDigits:0}):n.toFixed(2);};
+const nval=id=>{const v=+($(id).value||0);return isFinite(v)?v:0;};
+
+function buildUVMatrix(){
+  const mat=$('uvMatrix'); mat.innerHTML='';
+  ["2.0","2.5","2.8","3.0"].forEach(thk=>{
+    const d=UV_DATA[`${uvLen}_${thk}`]||{};
+    const filmAdd=uvFilm==='gilded'?+uvLen*3.5:0;
+    const shown=d.price?(d.price+filmAdd).toFixed(2):'—';
+    const cell=document.createElement('div');
+    cell.className='uv-cell'+(thk===uvThk?' active':'');
+    cell.innerHTML=`<div class="uv-thick">${thk}mm</div><div class="uv-price">¥${shown}</div>`;
+    cell.addEventListener('click',()=>{
+      uvThk=thk;
+      document.querySelectorAll('.uv-cell').forEach(c=>c.classList.remove('active'));
+      cell.classList.add('active');
+      syncUVFields(); calc();
+    });
+    mat.appendChild(cell);
+  });
+}
+
+function syncUVFields(){
+  const d=UV_DATA[`${uvLen}_${uvThk}`]||{};
+  const filmAdd=uvFilm==='gilded'?+uvLen*3.5:0;
+  const total=d.price?d.price+filmAdd:0;
+  $('uv_s_len').textContent=uvLen+'m';
+  $('uv_s_thk').textContent=uvThk+'mm';
+  $('uv_s_price').textContent=total?'¥'+f2(total):'—';
+  $('uv_s_qty').textContent=d.qty?(d.qty+'张'):'—';
+  if(d.price) $('exTax').value=f2(total);
+}
+
+document.querySelectorAll('.uv-len-btn').forEach(b=>b.addEventListener('click',()=>{
+  uvLen=b.dataset.len;
+  document.querySelectorAll('.uv-len-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  buildUVMatrix(); syncUVFields(); calc();
+}));
+
+document.querySelectorAll('.film-btn').forEach(b=>b.addEventListener('click',()=>{
+  uvFilm=b.dataset.film;
+  document.querySelectorAll('.film-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  buildUVMatrix(); syncUVFields(); calc();
+}));
+
+$('rebateSlider').addEventListener('input',e=>{
+  rebatePct=+e.target.value;
+  $('rebatePctLabel').textContent=rebatePct+'%';
+  document.querySelectorAll('.rebate-quick-btn').forEach(b=>{
+    b.classList.toggle('active',+b.dataset.pct===rebatePct);
+  });
+  calc();
+});
+
+document.querySelectorAll('.rebate-quick-btn').forEach(b=>b.addEventListener('click',()=>{
+  rebatePct=+b.dataset.pct;
+  $('rebateSlider').value=rebatePct;
+  $('rebatePctLabel').textContent=rebatePct+'%';
+  document.querySelectorAll('.rebate-quick-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  calc();
+}));
+
+function calc(){
+  const exTax=nval('exTax'), margin=nval('margin')/100, fx=nval('fx')||7.25;
+  const portFee=nval('portFee'), palletFee=nval('palletFee');
+  const d=UV_DATA[`${uvLen}_${uvThk}`]||{};
+  const sheets=d.qty||0;
+  const chargeQty=sheets;
+  const exFactoryCost=exTax*chargeQty;
+  let fobRmbUnit=exTax*(1+margin)+(chargeQty>0?(portFee+palletFee)/chargeQty:0);
+  let fobRmbTotalV=fobRmbUnit*chargeQty;
+  const costRmb=exFactoryCost+portFee+palletFee;
+  const rebateRmb=exFactoryCost/1.13*0.13;
+
+  // 贴退税逻辑
+  let rebateGiven=0, rebateKept=rebateRmb;
+  let origFobRmbTotal=fobRmbTotalV, origFobRmbUnit=fobRmbUnit;
+  if(rebatePct>0){
+    rebateGiven=rebateRmb*rebatePct/100;
+    rebateKept=rebateRmb-rebateGiven;
+    fobRmbTotalV=fobRmbTotalV-rebateGiven;
+    fobRmbUnit=chargeQty>0?fobRmbTotalV/chargeQty:0;
+  }
+
+  const fobUsdUnitV=fobRmbUnit/fx, fobUsdTotalV=fobRmbTotalV/fx;
+  const profit=fobRmbTotalV-costRmb;
+  const realProfit=profit+rebateKept;
+  const realRate=fobRmbTotalV?realProfit/fobRmbTotalV*100:0;
+
+  $('metersOut').innerHTML=sheets>0?fmtN(sheets)+'<span class="kpi-unit">张</span>':'—';
+
+  if(rebatePct>0 && rebateGiven>0){
+    $('fobUsdUnit').innerHTML='<span class="kpi-strike">'+f2(origFobRmbUnit/fx)+'</span>'+f2(fobUsdUnitV)+'<span class="kpi-unit">/张</span>';
+    $('fobRmbUnit').innerHTML='<span class="kpi-strike">'+f2(origFobRmbUnit)+'</span>'+f2(fobRmbUnit)+'<span class="kpi-unit">/张</span>';
+    $('fobUsdTotal').innerHTML='<span class="kpi-strike">'+fmtN(origFobRmbTotal/fx)+'</span>'+fmtN(fobUsdTotalV);
+    $('fobRmbTotal').innerHTML='<span class="kpi-strike">'+fmtN(origFobRmbTotal)+'</span>'+fmtN(fobRmbTotalV);
+  } else {
+    $('fobUsdUnit').innerHTML=f2(fobUsdUnitV)+'<span class="kpi-unit">/张</span>';
+    $('fobRmbUnit').innerHTML=f2(fobRmbUnit)+'<span class="kpi-unit">/张</span>';
+    $('fobUsdTotal').innerHTML=fmtN(fobUsdTotalV);
+    $('fobRmbTotal').innerHTML=fmtN(fobRmbTotalV);
+  }
+
+  $('costOut').innerHTML=fmtN(costRmb);
+  $('rebateOut').innerHTML=fmtN(rebateRmb);
+  $('profitOut').innerHTML=fmtN(profit);
+  $('realProfitOut').innerHTML=fmtN(realProfit);
+  $('rebateGivenOut').innerHTML=fmtN(rebateGiven);
+  $('rebateKeptOut').innerHTML=fmtN(rebateKept);
+  $('realRateOut').textContent=f2(realRate)+'%';
+  const bar=$('profitBar');
+  bar.style.width=(Math.min(Math.max(realRate,0),40)/40*100)+'%';
+  bar.className='profit-bar-fill '+(realRate>=15?'good':realRate>=8?'ok':'low');
+  $('commOut').textContent=fmtN(realProfit*COMM)+' RMB';
+  $('noteStrip').textContent=`UV 20GP | ${uvLen}m × ${uvThk}mm | ${sheets}张 | 港杂¥${portFee} | 托盘¥${palletFee}${uvFilm==='gilded'?' | 鎏金':''}${rebatePct>0?' | 贴退税'+rebatePct+'%':''}`;
+}
+
+['exTax','margin','fx','portFee','palletFee']
+  .forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('input',calc);el.addEventListener('change',calc);});
+$('btn').addEventListener('click',calc);
+
+buildUVMatrix();
+syncUVFields();
+calc();
+</script>
+</body>
+</html>
