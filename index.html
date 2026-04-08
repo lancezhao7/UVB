@@ -3,24 +3,38 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Evoke WPC · UV板报价计算器</title>
+<title>Evoke WPC · 报价计算器</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
   :root{--bg:#0e0f11;--surface:#16181c;--surface2:#1e2026;--border:#2a2d35;--accent:#c8f135;--accent2:#4af0c4;--text:#e8eaf0;--muted:#6b7080;--danger:#ff5f5f;--warn:#f0c040;--radius:12px;}
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;padding:24px 16px 48px;}
-  .header{display:flex;align-items:baseline;gap:12px;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);max-width:860px;margin-left:auto;margin-right:auto;}
+  .header{display:flex;align-items:baseline;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);max-width:860px;margin-left:auto;margin-right:auto;}
   .header-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--accent);letter-spacing:-0.5px;}
   .header-sub{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+  /* mode tabs */
+  .mode-tabs{max-width:860px;margin:0 auto 14px;display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:5px;}
+  .mode-tab{flex:1;text-align:center;padding:11px;border-radius:8px;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;cursor:pointer;color:var(--muted);transition:all 0.15s;}
+  .mode-tab.active{background:var(--accent);color:#0e0f11;}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:860px;margin:0 auto;}
   @media(max-width:640px){.grid{grid-template-columns:1fr;}}
+  .col-full{grid-column:1/-1;}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
-  .card+.card{margin-top:14px;}
+  .card+.card,.card~.card{margin-top:14px;}
   .card-title{font-family:'Syne',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
   .field{margin-bottom:12px;}
   .field label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:0.5px;}
-  .field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:9px 12px;outline:none;transition:border-color 0.15s;appearance:none;-webkit-appearance:none;}
-  .field input:focus{border-color:var(--accent);}
+  .field input,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:9px 12px;outline:none;transition:border-color 0.15s;appearance:none;-webkit-appearance:none;}
+  .field input:focus,.field select:focus{border-color:var(--accent);}
+  .field input.target{font-size:18px;font-weight:600;color:var(--accent2);border-color:var(--accent2);background:#081510;}
+  .field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7080' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+  /* product pills */
+  .pill-group{display:flex;gap:6px;flex-wrap:wrap;}
+  .pill{padding:6px 14px;border-radius:99px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--surface2);color:var(--muted);transition:all 0.15s;font-family:'DM Mono',monospace;}
+  .pill.active{background:var(--accent);color:#0e0f11;border-color:var(--accent);font-weight:600;}
+  .container-group{display:flex;gap:6px;}
+  .ctag{flex:1;text-align:center;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--surface2);color:var(--muted);transition:all 0.15s;}
+  .ctag.active{border-color:var(--accent2);color:var(--accent2);background:#0d201a;}
   /* UV */
   .uv-len-group{display:flex;gap:6px;margin-bottom:10px;}
   .uv-len-btn{flex:1;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--border);font-size:13px;cursor:pointer;background:var(--surface2);color:var(--muted);transition:all 0.15s;}
@@ -35,32 +49,32 @@
   .film-group{display:flex;gap:6px;}
   .film-btn{flex:1;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--surface2);color:var(--muted);transition:all 0.15s;}
   .film-btn.active{border-color:#f0c040;color:#f0c040;background:#1a1800;}
-  /* 贴退税 slider */
+  /* 贴退税 */
   .rebate-row{display:flex;align-items:center;gap:10px;}
   .rebate-row input[type="range"]{flex:1;-webkit-appearance:none;appearance:none;height:4px;background:var(--surface2);border-radius:99px;outline:none;border:1px solid var(--border);padding:0;}
   .rebate-row input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--warn);cursor:pointer;border:2px solid var(--bg);}
   .rebate-row input[type="range"]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--warn);cursor:pointer;border:2px solid var(--bg);}
-  .rebate-pct{min-width:48px;text-align:right;font-size:14px;color:var(--warn);font-weight:500;}
+  .rebate-pct{min-width:60px;text-align:right;font-size:14px;color:var(--warn);font-weight:500;}
   .rebate-quick{display:flex;gap:4px;margin-top:8px;}
   .rebate-quick-btn{flex:1;padding:5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.15s;}
   .rebate-quick-btn:hover{border-color:var(--warn);color:var(--warn);}
   .rebate-quick-btn.active{background:#1a1800;border-color:var(--warn);color:var(--warn);}
-  /* specs */
   .specs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;}
   .spec-item{background:var(--surface2);border-radius:8px;padding:8px 10px;}
   .spec-label{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
   .spec-val{font-size:13px;color:var(--text);}
-  /* kpi */
   .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .kpi-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
   .kpi-item.hl{border-color:var(--accent);background:#141a05;}
   .kpi-item.hl2{border-color:var(--accent2);background:#081510;}
   .kpi-item.warn{border-color:var(--warn);background:#1a1800;}
+  .kpi-item.danger{border-color:var(--danger);background:#1a0808;}
   .kpi-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
   .kpi-value{font-size:20px;font-weight:500;color:var(--text);letter-spacing:-0.5px;}
   .kpi-item.hl .kpi-value{color:var(--accent);}
   .kpi-item.hl2 .kpi-value{color:var(--accent2);}
   .kpi-item.warn .kpi-value{color:var(--warn);}
+  .kpi-item.danger .kpi-value{color:var(--danger);}
   .kpi-unit{font-size:11px;color:var(--muted);margin-left:3px;}
   .kpi-strike{text-decoration:line-through;color:var(--muted);font-size:11px;margin-right:5px;}
   .profit-bar-wrap{margin-top:10px;}
@@ -72,18 +86,44 @@
   .profit-bar-fill.low{background:var(--danger);}
   .divider{height:1px;background:var(--border);margin:14px 0;}
   .note-strip{font-size:11px;color:var(--muted);background:var(--surface2);border-radius:8px;padding:10px 12px;line-height:1.6;border-left:2px solid var(--border);}
+  .status-badge{padding:10px 14px;border-radius:8px;font-size:13px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:0.5px;text-align:center;margin-bottom:10px;}
+  .status-badge.good{background:#141a05;color:var(--accent);border:1px solid var(--accent);}
+  .status-badge.warn{background:#1a1800;color:var(--warn);border:1px solid var(--warn);}
+  .status-badge.danger{background:#1a0808;color:var(--danger);border:1px solid var(--danger);}
   .calc-btn{width:100%;padding:13px;background:var(--accent);color:#0e0f11;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:opacity 0.15s,transform 0.1s;}
   .calc-btn:hover{opacity:0.9;}
   .calc-btn:active{transform:scale(0.98);}
   .tag-auto{display:inline-block;font-size:9px;background:#1a2a0a;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 5px;margin-left:6px;letter-spacing:1px;vertical-align:middle;}
   .mt{margin-top:14px;}
+  .hidden{display:none!important;}
 </style>
 </head>
 <body>
 <div style="max-width:860px;margin:0 auto;">
   <div class="header">
     <span class="header-brand">EVOKE WPC</span>
-    <span class="header-sub">UV板报价计算器 v1.0</span>
+    <span class="header-sub">报价计算器 v2.1</span>
+  </div>
+
+  <!-- 模式切换 -->
+  <div class="mode-tabs">
+    <div class="mode-tab active" data-mode="fob">正算 FOB</div>
+    <div class="mode-tab" data-mode="reverse">反推 FOB</div>
+    <div class="mode-tab" data-mode="exw">EXW</div>
+  </div>
+
+  <!-- 产品类型 -->
+  <div style="max-width:860px;margin:0 auto 14px;">
+    <div class="card">
+      <div class="card-title">产品类型</div>
+      <div class="pill-group" id="productPills">
+        <div class="pill active" data-val="UV">UV 板</div>
+        <div class="pill" data-val="ASA">ASA 户外墙板</div>
+        <div class="pill" data-val="WPC">WPC 格栅</div>
+        <div class="pill" data-val="PE">PE 木塑</div>
+        <div class="pill" data-val="WOOD">木饰面</div>
+      </div>
+    </div>
   </div>
 
   <div class="grid">
@@ -91,7 +131,7 @@
     <div>
 
       <!-- UV 规格 -->
-      <div class="card">
+      <div class="card" id="uvCard">
         <div class="card-title">UV 规格 <span class="tag-auto">AUTO-FILL</span></div>
         <div class="field">
           <label>长度</label>
@@ -120,23 +160,96 @@
         </div>
       </div>
 
+      <!-- ASA 型号 -->
+      <div class="card hidden" id="asaCard">
+        <div class="card-title">ASA 型号 <span class="tag-auto">AUTO-FILL</span></div>
+        <div class="field">
+          <label>选择型号</label>
+          <select id="asaModel">
+            <option value="">— 手动输入 —</option>
+            <option value="220x25">220×25 格栅板</option>
+            <option value="214x22">214×22 格栅板</option>
+            <option value="192x30">192×30 格栅板</option>
+            <option value="120x12">120×12 墙板</option>
+            <option value="112x16">112×16 墙板</option>
+            <option value="162x16">162×16 墙板</option>
+            <option value="50x50">50×50 角线</option>
+            <option value="160edge">160 收边线</option>
+          </select>
+        </div>
+        <div id="asaSpecsRow" class="specs-row hidden">
+          <div class="spec-item"><div class="spec-label">米重</div><div class="spec-val" id="s_kgpm">—</div></div>
+          <div class="spec-item"><div class="spec-label">包装cm</div><div class="spec-val" id="s_pack">—</div></div>
+          <div class="spec-item"><div class="spec-label">支/包</div><div class="spec-val" id="s_n">—</div></div>
+          <div class="spec-item"><div class="spec-label">出厂价</div><div class="spec-val" id="s_price">—</div></div>
+        </div>
+      </div>
+
+      <!-- WPC/ASA 装柜参数 -->
+      <div class="card hidden mt" id="volumeBox">
+        <div class="card-title">装柜参数</div>
+        <div class="field"><label>单支长度 L (m)</label><input id="vol_L" value="2.90"/></div>
+        <div class="field"><label>包装宽 Pw (m)</label><input id="vol_Pw" value="0.23"/></div>
+        <div class="field"><label>包装高 Ph (m)</label><input id="vol_Ph" value="0.21"/></div>
+        <div class="field"><label>每包支数 (pcs/包)</label><input id="vol_N" value="8"/></div>
+      </div>
+
+      <!-- PE -->
+      <div class="card hidden" id="peBox">
+        <div class="card-title">PE 参数</div>
+        <div class="field"><label>每延米重量 (kg/m)</label><input id="pe_kgpm" value="1"/></div>
+        <div class="note-strip mt">限重 28,000 kg，总米数 = ⌊28000 ÷ kg/m⌋</div>
+      </div>
+
+      <!-- 木饰面 -->
+      <div class="card hidden" id="woodBox">
+        <div class="card-title">木饰面参数</div>
+        <div class="field"><label>长度 L (m)</label>
+          <select id="wood_L"><option value="2.44">2.44m</option><option value="2.6">2.6m</option><option value="2.8">2.8m</option><option value="2.9">2.9m</option></select>
+        </div>
+        <div class="field"><label>厚度 (mm)</label>
+          <select id="wood_thk"><option value="5">5.0mm</option><option value="7.5">7.5mm</option><option value="8">8.0mm</option></select>
+        </div>
+        <div class="field"><label>密度 (kg/m³)</label>
+          <select id="wood_den"><option value="650">650</option><option value="700">700</option></select>
+        </div>
+      </div>
+
+      <!-- 柜型（UV 不显示） -->
+      <div class="card mt" id="containerCard">
+        <div class="card-title">柜型</div>
+        <div class="container-group">
+          <div class="ctag" data-val="20GP">20GP</div>
+          <div class="ctag" data-val="40GP">40GP</div>
+          <div class="ctag active" data-val="40HQ">40HQ</div>
+        </div>
+      </div>
+
       <!-- 价格参数 -->
       <div class="card mt">
         <div class="card-title">价格参数</div>
-        <div class="field"><label>含税出厂价 (RMB/张)</label><input id="exTax" value="0"/></div>
-        <div class="field"><label>报价利润点 %</label><input id="margin" value="15"/></div>
-        <div class="field"><label>汇率 (RMB/USD)</label><input id="fx" value="7.25"/></div>
-        <div class="field"><label>港杂费 (RMB)</label><input id="portFee" value="5000"/></div>
-        <div class="field"><label>托盘费 (RMB)</label><input id="palletFee" value="1440"/></div>
+        <div class="field"><label id="exTaxLabel">含税出厂价 (RMB/张)</label><input id="exTax" value="0"/></div>
+
+        <!-- 反推模式：目标价 -->
+        <div class="field hidden" id="targetField">
+          <label id="targetLabel">目标 FOB 单价 (USD/张)</label>
+          <input id="targetUsd" class="target" value="0" placeholder="客户报价"/>
+        </div>
+
+        <!-- 正算/EXW 模式：利润点 -->
+        <div class="field" id="marginField"><label>报价利润点 %</label><input id="margin" value="5"/></div>
+
+        <div class="field"><label>汇率 (RMB/USD)</label><input id="fx" value="6.7"/></div>
+        <div class="field" id="portFeeField"><label>港杂费 (RMB)</label><input id="portFee" value="5000"/></div>
       </div>
 
       <!-- 贴退税 -->
-      <div class="card mt">
+      <div class="card mt" id="rebateCard">
         <div class="card-title">贴退税成交</div>
         <div class="field">
           <label>让利比例（贴出去的退税占退税总额的百分比）</label>
           <div class="rebate-row">
-            <input type="range" id="rebateSlider" min="0" max="100" step="5" value="0"/>
+            <input type="range" id="rebateSlider" min="0" max="100" step="1" value="0"/>
             <span class="rebate-pct" id="rebatePctLabel">0%</span>
           </div>
           <div class="rebate-quick">
@@ -147,7 +260,7 @@
             <div class="rebate-quick-btn" data-pct="100">全贴</div>
           </div>
         </div>
-        <div class="note-strip">把退税让一部分给客户以降低 FOB 报价，方便压价成交。真实利润仍按"贴让后报价利润 + 留存退税"计算。</div>
+        <div class="note-strip">把退税让一部分给客户以降低 FOB 报价。真实利润 = 贴让后报价利润 + 留存退税。</div>
       </div>
 
       <div class="mt"><button class="calc-btn" id="btn">CALCULATE</button></div>
@@ -155,37 +268,39 @@
 
     <!-- 右列：结果 -->
     <div>
+      <div class="status-badge hidden" id="statusBadge"></div>
+
       <div class="card">
         <div class="card-title">装柜结果</div>
         <div class="kpi-grid">
           <div class="kpi-item hl">
-            <div class="kpi-label">装柜张数</div>
+            <div class="kpi-label" id="lblMeters">每柜总米数</div>
             <div class="kpi-value" id="metersOut">—</div>
           </div>
           <div class="kpi-item">
-            <div class="kpi-label">柜型</div>
-            <div class="kpi-value" style="font-size:16px;">20GP</div>
+            <div class="kpi-label">总 PCS / 张</div>
+            <div class="kpi-value" id="pcsOut">—</div>
           </div>
         </div>
       </div>
 
       <div class="card mt">
-        <div class="card-title">FOB 报价</div>
+        <div class="card-title" id="priceCardTitle">FOB 报价</div>
         <div class="kpi-grid">
           <div class="kpi-item hl">
-            <div class="kpi-label">FOB 单价 USD</div>
+            <div class="kpi-label" id="priceUsdUnitLabel">FOB 单价 USD</div>
             <div class="kpi-value" id="fobUsdUnit">—</div>
           </div>
           <div class="kpi-item">
-            <div class="kpi-label">FOB 单价 RMB</div>
+            <div class="kpi-label" id="priceRmbUnitLabel">FOB 单价 RMB</div>
             <div class="kpi-value" id="fobRmbUnit">—</div>
           </div>
           <div class="kpi-item hl2">
-            <div class="kpi-label">FOB 总额 USD</div>
+            <div class="kpi-label" id="priceUsdTotalLabel">FOB 总额 USD</div>
             <div class="kpi-value" id="fobUsdTotal">—</div>
           </div>
           <div class="kpi-item">
-            <div class="kpi-label">FOB 总额 RMB</div>
+            <div class="kpi-label" id="priceRmbTotalLabel">FOB 总额 RMB</div>
             <div class="kpi-value" id="fobRmbTotal">—</div>
           </div>
         </div>
@@ -199,7 +314,7 @@
           <div class="kpi-item"><div class="kpi-label">报价利润</div><div class="kpi-value" id="profitOut">—</div></div>
           <div class="kpi-item"><div class="kpi-label">真实利润</div><div class="kpi-value" id="realProfitOut">—</div></div>
         </div>
-        <div class="kpi-grid mt">
+        <div class="kpi-grid mt" id="rebateKpiGrid">
           <div class="kpi-item warn">
             <div class="kpi-label">贴出去的退税</div>
             <div class="kpi-value" id="rebateGivenOut">—</div>
@@ -209,13 +324,23 @@
             <div class="kpi-value" id="rebateKeptOut">—</div>
           </div>
         </div>
+        <div class="kpi-grid mt hidden" id="impliedKpiGrid">
+          <div class="kpi-item hl2">
+            <div class="kpi-label">隐含报价利润率</div>
+            <div class="kpi-value" id="impliedMarginOut">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">保本所需贴退税</div>
+            <div class="kpi-value" id="breakevenRebateOut">—</div>
+          </div>
+        </div>
         <div class="profit-bar-wrap">
           <div class="profit-bar-label"><span>真实利润率</span><span id="realRateOut">—%</span></div>
           <div class="profit-bar-track"><div class="profit-bar-fill" id="profitBar"></div></div>
         </div>
         <div class="divider"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:11px;color:var(--muted);">提成 (15%)</span>
+          <span style="font-size:11px;color:var(--muted);" id="commLabel">提成</span>
           <span style="font-size:16px;color:var(--accent2);" id="commOut">—</span>
         </div>
       </div>
@@ -226,6 +351,16 @@
 </div>
 
 <script>
+const ASA_DATA={
+  "220x25":{price:17.6,kgpm:1.68,pw:0.23,ph:0.21,pl:2.9,n:8},
+  "214x22":{price:16.5,kgpm:1.56,pw:0.224,ph:0.205,pl:2.9,n:9},
+  "192x30":{price:16.7,kgpm:1.58,pw:0.246,ph:0.205,pl:2.9,n:8},
+  "120x12":{price:7.8,kgpm:0.59,pw:0.145,ph:0.17,pl:2.9,n:20},
+  "112x16":{price:8.6,kgpm:0.68,pw:0.14,ph:0.203,pl:2.9,n:18},
+  "162x16":{price:12.0,kgpm:1.00,pw:0.158,ph:0.19,pl:2.9,n:14},
+  "50x50":{price:6.2,kgpm:0.45,pw:0.14,ph:0.145,pl:2.9,n:30},
+  "160edge":{price:5.8,kgpm:0.45,pw:0.25,ph:0.115,pl:2.9,n:40}
+};
 const UV_DATA={
   "2.44_2.0":{price:41.52,qty:2300},"2.44_2.5":{price:48.47,qty:1800},
   "2.44_2.8":{price:52.75,qty:1600},"2.44_3.0":{price:55.43,qty:1500},
@@ -234,15 +369,23 @@ const UV_DATA={
   "2.90_2.0":{price:49.01,qty:1900},"2.90_2.5":{price:58.10,qty:1500},
   "2.90_2.8":{price:62.92,qty:1300},"2.90_3.0":{price:66.13,qty:1200}
 };
+const CONTAINERS={"20GP":{L:5.90,W:2.35,H:2.39},"40GP":{L:12.03,W:2.35,H:2.39},"40HQ":{L:12.03,W:2.35,H:2.70}};
+const PAYLOAD=28000, COMM=0.15;
+// 硬编码托盘费（不在 UI 显示）
+const PALLET_UV=12*120;    // 1440
+const PALLET_WOOD=15*220;  // 3300
 
-const COMM=0.15;
-let uvLen="2.44",uvThk="2.0",uvFilm="normal",rebatePct=0;
+let product="UV", mode="fob", container="40HQ";
+let uvLen="2.44", uvThk="2.0", uvFilm="normal";
+let rebatePct=0, userOverrideRebate=false;
 
 const $=id=>document.getElementById(id);
+const flo=x=>Math.floor(x>0?x:0);
 const f2=x=>(+x).toFixed(2);
 const fmtN=x=>{const n=+x;if(!isFinite(n))return"—";return Math.abs(n)>=10000?n.toLocaleString('zh',{maximumFractionDigits:0}):n.toFixed(2);};
 const nval=id=>{const v=+($(id).value||0);return isFinite(v)?v:0;};
 
+// ====== UV 矩阵 ======
 function buildUVMatrix(){
   const mat=$('uvMatrix'); mat.innerHTML='';
   ["2.0","2.5","2.8","3.0"].forEach(thk=>{
@@ -253,7 +396,7 @@ function buildUVMatrix(){
     cell.className='uv-cell'+(thk===uvThk?' active':'');
     cell.innerHTML=`<div class="uv-thick">${thk}mm</div><div class="uv-price">¥${shown}</div>`;
     cell.addEventListener('click',()=>{
-      uvThk=thk;
+      uvThk=thk; userOverrideRebate=false;
       document.querySelectorAll('.uv-cell').forEach(c=>c.classList.remove('active'));
       cell.classList.add('active');
       syncUVFields(); calc();
@@ -261,7 +404,6 @@ function buildUVMatrix(){
     mat.appendChild(cell);
   });
 }
-
 function syncUVFields(){
   const d=UV_DATA[`${uvLen}_${uvThk}`]||{};
   const filmAdd=uvFilm==='gilded'?+uvLen*3.5:0;
@@ -274,96 +416,322 @@ function syncUVFields(){
 }
 
 document.querySelectorAll('.uv-len-btn').forEach(b=>b.addEventListener('click',()=>{
-  uvLen=b.dataset.len;
+  uvLen=b.dataset.len; userOverrideRebate=false;
   document.querySelectorAll('.uv-len-btn').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   buildUVMatrix(); syncUVFields(); calc();
 }));
-
 document.querySelectorAll('.film-btn').forEach(b=>b.addEventListener('click',()=>{
-  uvFilm=b.dataset.film;
+  uvFilm=b.dataset.film; userOverrideRebate=false;
   document.querySelectorAll('.film-btn').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   buildUVMatrix(); syncUVFields(); calc();
 }));
 
+// ====== 产品切换：重置模式到 FOB ======
+document.querySelectorAll('#productPills .pill').forEach(p=>p.addEventListener('click',()=>{
+  document.querySelectorAll('#productPills .pill').forEach(x=>x.classList.remove('active'));
+  p.classList.add('active');
+  product=p.dataset.val;
+  // 切产品时模式重置为 FOB
+  mode='fob';
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.toggle('active',t.dataset.mode==='fob'));
+  userOverrideRebate=false;
+  updateProductUI();
+  applyMode();
+  calc();
+}));
+
+// ====== 模式切换 ======
+document.querySelectorAll('.mode-tab').forEach(t=>t.addEventListener('click',()=>{
+  mode=t.dataset.mode;
+  userOverrideRebate=false;
+  document.querySelectorAll('.mode-tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  applyMode(); calc();
+}));
+
+// ====== 柜型 ======
+document.querySelectorAll('.ctag').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('.ctag').forEach(x=>x.classList.remove('active'));
+  c.classList.add('active'); container=c.dataset.val;
+  userOverrideRebate=false;
+  calc();
+}));
+
+// ====== ASA 型号 ======
+$('asaModel').addEventListener('change',()=>{
+  const key=$('asaModel').value;
+  if(!key){$('asaSpecsRow').classList.add('hidden');return;}
+  const d=ASA_DATA[key];
+  $('exTax').value=d.price; $('vol_L').value=d.pl;
+  $('vol_Pw').value=d.pw; $('vol_Ph').value=d.ph; $('vol_N').value=d.n;
+  $('s_kgpm').textContent=d.kgpm+'kg/m';
+  $('s_pack').textContent=(d.pw*100).toFixed(1)+'×'+(d.ph*100).toFixed(1)+'cm';
+  $('s_n').textContent=d.n+'支';
+  $('s_price').textContent='¥'+d.price+'/m';
+  $('asaSpecsRow').classList.remove('hidden');
+  userOverrideRebate=false;
+  calc();
+});
+
+// ====== 贴退税滑块 / 快捷按钮 ======
 $('rebateSlider').addEventListener('input',e=>{
   rebatePct=+e.target.value;
-  $('rebatePctLabel').textContent=rebatePct+'%';
+  userOverrideRebate=true;
+  $('rebatePctLabel').textContent=f2(rebatePct)+'%';
   document.querySelectorAll('.rebate-quick-btn').forEach(b=>{
     b.classList.toggle('active',+b.dataset.pct===rebatePct);
   });
   calc();
 });
-
 document.querySelectorAll('.rebate-quick-btn').forEach(b=>b.addEventListener('click',()=>{
   rebatePct=+b.dataset.pct;
+  userOverrideRebate=true;
   $('rebateSlider').value=rebatePct;
-  $('rebatePctLabel').textContent=rebatePct+'%';
+  $('rebatePctLabel').textContent=f2(rebatePct)+'%';
   document.querySelectorAll('.rebate-quick-btn').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   calc();
 }));
 
+// ====== 产品 UI 切换 ======
+function updateProductUI(){
+  const p=product;
+  $('uvCard').classList.toggle('hidden',p!=='UV');
+  $('asaCard').classList.toggle('hidden',p!=='ASA');
+  $('volumeBox').classList.toggle('hidden',!(p==='ASA'||p==='WPC'));
+  $('peBox').classList.toggle('hidden',p!=='PE');
+  $('woodBox').classList.toggle('hidden',p!=='WOOD');
+  $('containerCard').classList.toggle('hidden',p==='UV');
+  // 出厂价标签
+  const labels={UV:'含税出厂价 (RMB/张)',ASA:'含税出厂价 (RMB/m)',WPC:'含税出厂价 (RMB/m)',PE:'含税出厂价 (RMB/m)',WOOD:'含税出厂价 (RMB/㎡)'};
+  $('exTaxLabel').textContent=labels[p];
+  // 装柜结果标签
+  $('lblMeters').textContent=p==='UV'?'装柜张数':(p==='WOOD'?'总平方米':'每柜总米数');
+}
+
+// ====== 模式 UI 切换 ======
+function applyMode(){
+  $('targetField').classList.toggle('hidden',mode!=='reverse');
+  $('marginField').classList.toggle('hidden',mode==='reverse');
+  $('portFeeField').classList.toggle('hidden',mode==='exw');
+  $('rebateCard').classList.toggle('hidden',mode==='exw');
+  $('impliedKpiGrid').classList.toggle('hidden',mode!=='reverse');
+  $('statusBadge').classList.toggle('hidden',mode!=='reverse');
+  // 反推模式的目标价单位
+  const targetUnits={UV:'USD/张',ASA:'USD/m',WPC:'USD/m',PE:'USD/m',WOOD:'USD/㎡'};
+  $('targetLabel').textContent=`目标 FOB 单价 (${targetUnits[product]})`;
+  // 价格区标题
+  if(mode==='exw'){
+    $('priceCardTitle').textContent='EXW 报价';
+    $('priceUsdUnitLabel').textContent='EXW 单价 USD';
+    $('priceRmbUnitLabel').textContent='EXW 单价 RMB';
+    $('priceUsdTotalLabel').textContent='EXW 总额 USD';
+    $('priceRmbTotalLabel').textContent='EXW 总额 RMB';
+  } else {
+    $('priceCardTitle').textContent='FOB 报价';
+    $('priceUsdUnitLabel').textContent='FOB 单价 USD';
+    $('priceRmbUnitLabel').textContent='FOB 单价 RMB';
+    $('priceUsdTotalLabel').textContent='FOB 总额 USD';
+    $('priceRmbTotalLabel').textContent='FOB 总额 RMB';
+  }
+}
+
+// ====== 主计算 ======
 function calc(){
-  const exTax=nval('exTax'), margin=nval('margin')/100, fx=nval('fx')||7.25;
-  const portFee=nval('portFee'), palletFee=nval('palletFee');
-  const d=UV_DATA[`${uvLen}_${uvThk}`]||{};
-  const sheets=d.qty||0;
-  const chargeQty=sheets;
+  const p=product;
+  const exTax=nval('exTax'), fx=nval('fx')||6.7;
+  const portFee=mode==='exw'?0:nval('portFee');
+
+  // ----- 各产品的装柜数量、单位 -----
+  let chargeQty=0, totalPCS=0, totalMeters=0, totalSqm=0;
+  let unitLabel='/m', palletCost=0;
+  let cont=container;
+
+  if(p==='UV'){
+    cont='20GP';
+    const d=UV_DATA[`${uvLen}_${uvThk}`]||{};
+    const sheets=d.qty||0;
+    totalPCS=sheets; chargeQty=sheets; unitLabel='/张';
+    palletCost=PALLET_UV;
+  }
+  else if(p==='ASA'||p==='WPC'){
+    const C=CONTAINERS[cont];
+    const L=nval('vol_L')||2.9, Pw=nval('vol_Pw')||0.23, Ph=nval('vol_Ph')||0.21, N=nval('vol_N')||8;
+    const nL=flo(C.L/L);
+    const packs=Math.max(nL*flo(C.W/Pw)*flo(C.H/Ph), nL*flo(C.W/Ph)*flo(C.H/Pw));
+    totalPCS=packs*N; totalMeters=totalPCS*L; chargeQty=totalMeters;
+    unitLabel='/m'; palletCost=0;
+  }
+  else if(p==='PE'){
+    const kgpm=nval('pe_kgpm')||1;
+    totalMeters=flo(PAYLOAD/kgpm); chargeQty=totalMeters;
+    unitLabel='/m'; palletCost=0;
+  }
+  else if(p==='WOOD'){
+    const L=+$('wood_L').value, thk=+$('wood_thk').value, den=+$('wood_den').value;
+    const kgPS=1.22*L*(thk/1000)*den;
+    const sheets=flo((PAYLOAD-1500)/(kgPS||1));
+    totalSqm=sheets*1.22*L;
+    totalPCS=sheets; chargeQty=totalSqm;
+    unitLabel='/㎡'; palletCost=PALLET_WOOD;
+  }
+
   const exFactoryCost=exTax*chargeQty;
-  let fobRmbUnit=exTax*(1+margin)+(chargeQty>0?(portFee+palletFee)/chargeQty:0);
-  let fobRmbTotalV=fobRmbUnit*chargeQty;
-  const costRmb=exFactoryCost+portFee+palletFee;
+  // 成本 = 出厂价 + 港杂 + 托盘
+  const costRmb=exFactoryCost+portFee+palletCost;
   const rebateRmb=exFactoryCost/1.13*0.13;
 
-  // 贴退税逻辑
+  let fobRmbUnit=0, fobRmbTotalV=0, origFobRmbUnit=0, origFobRmbTotal=0;
   let rebateGiven=0, rebateKept=rebateRmb;
-  let origFobRmbTotal=fobRmbTotalV, origFobRmbUnit=fobRmbUnit;
-  if(rebatePct>0){
-    rebateGiven=rebateRmb*rebatePct/100;
-    rebateKept=rebateRmb-rebateGiven;
-    fobRmbTotalV=fobRmbTotalV-rebateGiven;
-    fobRmbUnit=chargeQty>0?fobRmbTotalV/chargeQty:0;
+  let impliedMargin=0;
+
+  if(mode==='fob' || mode==='exw'){
+    const margin=nval('margin')/100;
+    // EXW 不算港杂；FOB 算港杂
+    const overhead=mode==='exw'?palletCost:(portFee+palletCost);
+    fobRmbUnit=exTax*(1+margin)+(chargeQty>0?overhead/chargeQty:0);
+    fobRmbTotalV=fobRmbUnit*chargeQty;
+    origFobRmbUnit=fobRmbUnit;
+    origFobRmbTotal=fobRmbTotalV;
+    if(mode==='fob' && rebatePct>0){
+      rebateGiven=rebateRmb*rebatePct/100;
+      rebateKept=rebateRmb-rebateGiven;
+      fobRmbTotalV-=rebateGiven;
+      fobRmbUnit=chargeQty>0?fobRmbTotalV/chargeQty:0;
+    }
+  }
+  else if(mode==='reverse'){
+    const targetUsd=nval('targetUsd');
+    fobRmbUnit=targetUsd*fx;
+    fobRmbTotalV=fobRmbUnit*chargeQty;
+    origFobRmbUnit=fobRmbUnit;
+    origFobRmbTotal=fobRmbTotalV;
+
+    // 自动贴退税：报价利润为负时，自动算精确百分比
+    if(!userOverrideRebate){
+      const noRebateProfit=fobRmbTotalV-costRmb;
+      if(noRebateProfit<0 && rebateRmb>0){
+        const needGiven=Math.min(-noRebateProfit,rebateRmb);
+        const autoPct=needGiven/rebateRmb*100;
+        rebatePct=Math.min(100,Math.max(0,autoPct));
+      } else {
+        rebatePct=0;
+      }
+      $('rebateSlider').value=rebatePct;
+      $('rebatePctLabel').textContent=f2(rebatePct)+'%';
+      document.querySelectorAll('.rebate-quick-btn').forEach(b=>{
+        b.classList.toggle('active',+b.dataset.pct===Math.round(rebatePct));
+      });
+    }
+
+    if(rebatePct>0){
+      rebateGiven=rebateRmb*rebatePct/100;
+      rebateKept=rebateRmb-rebateGiven;
+    }
+    if(exFactoryCost>0){
+      impliedMargin=(fobRmbTotalV-portFee-palletCost-exFactoryCost)/exFactoryCost*100;
+    }
   }
 
   const fobUsdUnitV=fobRmbUnit/fx, fobUsdTotalV=fobRmbTotalV/fx;
-  const profit=fobRmbTotalV-costRmb;
+  let profit;
+  if(mode==='reverse'){
+    profit=fobRmbTotalV-costRmb-rebateGiven;
+  } else {
+    profit=fobRmbTotalV-costRmb;
+  }
+  const profitDisplay=(mode==='reverse'&&profit<0)?0:profit;
   const realProfit=profit+rebateKept;
   const realRate=fobRmbTotalV?realProfit/fobRmbTotalV*100:0;
 
-  $('metersOut').innerHTML=sheets>0?fmtN(sheets)+'<span class="kpi-unit">张</span>':'—';
+  // ----- 装柜结果展示 -----
+  if(p==='UV'){
+    $('metersOut').innerHTML=totalPCS>0?fmtN(totalPCS)+'<span class="kpi-unit">张</span>':'—';
+  } else if(p==='WOOD'){
+    $('metersOut').innerHTML=totalSqm>0?fmtN(totalSqm)+'<span class="kpi-unit">㎡</span>':'—';
+  } else {
+    $('metersOut').innerHTML=totalMeters>0?fmtN(totalMeters)+'<span class="kpi-unit">m</span>':'—';
+  }
+  $('pcsOut').innerHTML=fmtN(totalPCS);
 
-  if(rebatePct>0 && rebateGiven>0){
-    $('fobUsdUnit').innerHTML='<span class="kpi-strike">'+f2(origFobRmbUnit/fx)+'</span>'+f2(fobUsdUnitV)+'<span class="kpi-unit">/张</span>';
-    $('fobRmbUnit').innerHTML='<span class="kpi-strike">'+f2(origFobRmbUnit)+'</span>'+f2(fobRmbUnit)+'<span class="kpi-unit">/张</span>';
+  // 价格显示
+  if(mode==='fob' && rebatePct>0 && rebateGiven>0){
+    $('fobUsdUnit').innerHTML='<span class="kpi-strike">'+f2(origFobRmbUnit/fx)+'</span>'+f2(fobUsdUnitV)+'<span class="kpi-unit">'+unitLabel+'</span>';
+    $('fobRmbUnit').innerHTML='<span class="kpi-strike">'+f2(origFobRmbUnit)+'</span>'+f2(fobRmbUnit)+'<span class="kpi-unit">'+unitLabel+'</span>';
     $('fobUsdTotal').innerHTML='<span class="kpi-strike">'+fmtN(origFobRmbTotal/fx)+'</span>'+fmtN(fobUsdTotalV);
     $('fobRmbTotal').innerHTML='<span class="kpi-strike">'+fmtN(origFobRmbTotal)+'</span>'+fmtN(fobRmbTotalV);
   } else {
-    $('fobUsdUnit').innerHTML=f2(fobUsdUnitV)+'<span class="kpi-unit">/张</span>';
-    $('fobRmbUnit').innerHTML=f2(fobRmbUnit)+'<span class="kpi-unit">/张</span>';
+    $('fobUsdUnit').innerHTML=f2(fobUsdUnitV)+'<span class="kpi-unit">'+unitLabel+'</span>';
+    $('fobRmbUnit').innerHTML=f2(fobRmbUnit)+'<span class="kpi-unit">'+unitLabel+'</span>';
     $('fobUsdTotal').innerHTML=fmtN(fobUsdTotalV);
     $('fobRmbTotal').innerHTML=fmtN(fobRmbTotalV);
   }
 
   $('costOut').innerHTML=fmtN(costRmb);
   $('rebateOut').innerHTML=fmtN(rebateRmb);
-  $('profitOut').innerHTML=fmtN(profit);
+  $('profitOut').innerHTML=fmtN(profitDisplay);
   $('realProfitOut').innerHTML=fmtN(realProfit);
   $('rebateGivenOut').innerHTML=fmtN(rebateGiven);
   $('rebateKeptOut').innerHTML=fmtN(rebateKept);
   $('realRateOut').textContent=f2(realRate)+'%';
+
+  // 反推模式专属
+  if(mode==='reverse'){
+    $('impliedMarginOut').innerHTML=f2(impliedMargin)+'<span class="kpi-unit">%</span>';
+    const noRebateProfit=fobRmbTotalV-costRmb;
+    const noRebateReal=noRebateProfit+rebateRmb;
+    let breakevenMsg;
+    if(noRebateReal<0){
+      breakevenMsg='做不了';
+    } else if(noRebateProfit>=0){
+      breakevenMsg='0% (已盈利)';
+    } else {
+      const maxGiven=(fobRmbTotalV-costRmb+rebateRmb)/2;
+      const maxPct=rebateRmb>0?Math.max(0,Math.min(100,maxGiven/rebateRmb*100)):0;
+      breakevenMsg='≤'+f2(maxPct)+'%';
+    }
+    $('breakevenRebateOut').innerHTML='<span style="font-size:14px;">'+breakevenMsg+'</span>';
+
+    const badge=$('statusBadge');
+    if(realRate>=15){badge.className='status-badge good';badge.textContent='✓ 价格优秀，可直接接受';}
+    else if(realRate>=8){badge.className='status-badge good';badge.textContent='✓ 价格可接受';}
+    else if(realRate>=0){badge.className='status-badge warn';badge.textContent='⚠ 利润偏低，建议再谈或贴退税成交';}
+    else if(noRebateReal>=0){badge.className='status-badge warn';badge.textContent='⚠ 报价亏损但退税可兜底，谨慎接单';}
+    else {badge.className='status-badge danger';badge.textContent='✗ 真实利润为负，不建议接单';}
+  }
+
   const bar=$('profitBar');
   bar.style.width=(Math.min(Math.max(realRate,0),40)/40*100)+'%';
   bar.className='profit-bar-fill '+(realRate>=15?'good':realRate>=8?'ok':'low');
-  $('commOut').textContent=fmtN(realProfit*COMM)+' RMB';
-  $('noteStrip').textContent=`UV 20GP | ${uvLen}m × ${uvThk}mm | ${sheets}张 | 港杂¥${portFee} | 托盘¥${palletFee}${uvFilm==='gilded'?' | 鎏金':''}${rebatePct>0?' | 贴退税'+rebatePct+'%':''}`;
+  const commRate=p==='ASA'?0.25:COMM;
+  $('commLabel').textContent='提成 ('+(commRate*100)+'%)';
+  $('commOut').textContent=fmtN(realProfit*commRate)+' RMB';
+
+  // 备注
+  const modeName={fob:'正算FOB',reverse:'反推FOB',exw:'EXW'}[mode];
+  const prodName={UV:'UV板',ASA:'ASA',WPC:'WPC',PE:'PE',WOOD:'木饰面'}[p];
+  let detail='';
+  if(p==='UV') detail=`${uvLen}m × ${uvThk}mm | ${totalPCS}张${uvFilm==='gilded'?' | 鎏金':''}`;
+  else if(p==='ASA'||p==='WPC') detail=`${cont} | ${totalPCS}支 | ${fmtN(totalMeters)}m`;
+  else if(p==='PE') detail=`${cont} | 28t限重 | ${totalMeters}m`;
+  else if(p==='WOOD') detail=`${cont} | ${totalPCS}张 | ${f2(totalSqm)}㎡`;
+  $('noteStrip').textContent=`${prodName} · ${modeName} | ${detail} | 港杂¥${portFee}${rebatePct>0?' | 贴退税'+f2(rebatePct)+'%':''}`;
 }
 
-['exTax','margin','fx','portFee','palletFee']
-  .forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('input',calc);el.addEventListener('change',calc);});
+// ====== 输入框监听 ======
+['exTax','margin','fx','portFee','targetUsd','vol_L','vol_Pw','vol_Ph','vol_N','pe_kgpm','wood_L','wood_thk','wood_den']
+  .forEach(id=>{const el=$(id);if(!el)return;
+    const handler=()=>{userOverrideRebate=false;calc();};
+    el.addEventListener('input',handler);
+    el.addEventListener('change',handler);
+  });
 $('btn').addEventListener('click',calc);
 
+// ====== 初始化 ======
+updateProductUI();
+applyMode();
 buildUVMatrix();
 syncUVFields();
 calc();
