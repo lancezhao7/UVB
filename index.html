@@ -96,13 +96,64 @@
   .tag-auto{display:inline-block;font-size:9px;background:#1a2a0a;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 5px;margin-left:6px;letter-spacing:1px;vertical-align:middle;}
   .mt{margin-top:14px;}
   .hidden{display:none!important;}
+
+  /* ====== 客户信息浮层 ====== */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-width:480px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;}
+  .modal-title{font-family:'Syne',sans-serif;font-size:14px;color:var(--accent);letter-spacing:1px;margin-bottom:18px;text-transform:uppercase;}
+  .modal-actions{display:flex;gap:8px;margin-top:16px;}
+  .modal-actions button{flex:1;padding:11px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;cursor:pointer;text-transform:uppercase;}
+  .btn-secondary{background:var(--surface2);color:var(--muted);border:1px solid var(--border)!important;}
+  .btn-primary{background:var(--accent);color:#0e0f11;}
+  .btn-secondary:hover{color:var(--text);}
+  .btn-primary:hover{opacity:0.9;}
+  .gen-btn{width:100%;padding:13px;background:transparent;color:var(--accent2);border:1px solid var(--accent2);border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;cursor:pointer;margin-top:10px;text-transform:uppercase;transition:all 0.15s;}
+  .gen-btn:hover{background:#081510;}
+
+  /* ====== 报价单预览 ====== */
+  .quote-overlay{position:fixed;inset:0;background:#525659;z-index:2000;overflow-y:auto;padding:20px;}
+  .quote-toolbar{max-width:794px;margin:0 auto 14px;display:flex;gap:8px;}
+  .quote-toolbar button{flex:1;padding:11px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;cursor:pointer;text-transform:uppercase;}
+  .quote-page{max-width:794px;margin:0 auto;background:#fff;color:#222;padding:48px 56px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5;min-height:1100px;}
+  .quote-logo{text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #1f6e3f;}
+  .quote-title{text-align:center;font-size:24px;font-weight:bold;letter-spacing:4px;margin:18px 0 28px;color:#222;}
+  .quote-meta{display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:24px;}
+  .quote-tofrom{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:28px;}
+  .quote-block h4{font-size:16px;color:#222;margin-bottom:10px;font-weight:bold;}
+  .quote-block p{margin-bottom:5px;font-size:12px;color:#333;}
+  .quote-block .label{display:inline-block;min-width:62px;color:#666;font-size:11px;}
+  .quote-section-title{background:#1f6e3f;color:#fff;text-align:center;padding:10px;font-size:14px;font-weight:bold;letter-spacing:2px;margin-bottom:0;}
+  .quote-table{width:100%;border-collapse:collapse;margin-bottom:24px;}
+  .quote-table th,.quote-table td{border:1px solid #d0d0d0;padding:10px 12px;font-size:12px;text-align:left;vertical-align:top;}
+  .quote-table th{background:#f3f5f0;font-weight:bold;color:#333;text-align:center;}
+  .quote-table td.num{text-align:right;font-family:'Courier New',monospace;}
+  .quote-table td.center{text-align:center;}
+  .quote-table tfoot td{background:#f9fafa;font-weight:bold;font-size:13px;}
+  .quote-terms{margin-bottom:24px;}
+  .quote-terms h4{font-size:13px;color:#1f6e3f;margin-bottom:8px;font-weight:bold;letter-spacing:1px;border-bottom:1px solid #d0d0d0;padding-bottom:4px;}
+  .quote-terms .row{display:grid;grid-template-columns:140px 1fr;gap:8px;font-size:12px;padding:4px 0;}
+  .quote-terms .row .k{color:#666;}
+  .quote-footer{margin-top:32px;padding-top:16px;border-top:1px solid #d0d0d0;display:grid;grid-template-columns:1fr 1fr;gap:32px;font-size:11px;color:#666;}
+  .quote-footer .sig{text-align:right;}
+  .quote-footer .sig .name{font-size:14px;color:#222;font-weight:bold;margin-top:4px;}
+  .quote-bottom-strip{margin-top:18px;padding-top:10px;border-top:1px dashed #d0d0d0;font-size:10px;color:#888;text-align:center;}
+
+  /* ====== 打印时只显示报价单 ====== */
+  @media print {
+    @page{size:A4;margin:12mm;}
+    body * {visibility:hidden;}
+    .quote-overlay,.quote-overlay * {visibility:visible;}
+    .quote-overlay{position:absolute;inset:0;padding:0;background:#fff;}
+    .quote-toolbar{display:none;}
+    .quote-page{box-shadow:none;padding:0;max-width:100%;min-height:auto;}
+  }
 </style>
 </head>
 <body>
 <div style="max-width:860px;margin:0 auto;">
   <div class="header">
     <span class="header-brand">EVOKE WPC</span>
-    <span class="header-sub">报价计算器 v2.1</span>
+    <span class="header-sub">报价计算器 v2.3</span>
   </div>
 
   <!-- 模式切换 -->
@@ -264,6 +315,7 @@
       </div>
 
       <div class="mt"><button class="calc-btn" id="btn">CALCULATE</button></div>
+      <button class="gen-btn" id="genBtn">📄 Generate Quotation PDF</button>
     </div>
 
     <!-- 右列：结果 -->
@@ -348,6 +400,31 @@
       <div class="note-strip mt" id="noteStrip">选择规格并点击 CALCULATE</div>
     </div>
   </div>
+</div>
+
+<!-- 客户信息浮层 -->
+<div class="modal-backdrop hidden" id="custModal">
+  <div class="modal">
+    <div class="modal-title">Customer Information</div>
+    <div class="field"><label>Company Name *</label><input id="custCompany" placeholder="e.g. ABC Trading Co., Ltd."/></div>
+    <div class="field"><label>Contact Person (Attn) *</label><input id="custAttn" placeholder="e.g. Mr. John Smith"/></div>
+    <div class="field"><label>Mobile / Tel</label><input id="custTel" placeholder="e.g. +1 555 123 4567"/></div>
+    <div class="field"><label>Email</label><input id="custEmail" placeholder="e.g. john@abc.com"/></div>
+    <div class="field"><label>Country / Address (optional)</label><input id="custAddress" placeholder="e.g. New York, USA"/></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="custCancel">Cancel</button>
+      <button class="btn-primary" id="custOk">Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- 报价单预览覆盖层 -->
+<div class="quote-overlay hidden" id="quoteOverlay">
+  <div class="quote-toolbar">
+    <button class="btn-secondary" id="quoteClose">← Back</button>
+    <button class="btn-primary" id="quotePrint">🖨 Print / Save as PDF</button>
+  </div>
+  <div class="quote-page" id="quotePage"></div>
 </div>
 
 <script>
@@ -735,6 +812,228 @@ applyMode();
 buildUVMatrix();
 syncUVFields();
 calc();
+
+// ====== 报价单生成逻辑 ======
+let lastCalc=null;
+
+// 把缓存逻辑直接接在 calc 上：每次 calc 跑完后调用
+function cacheLastCalc(){
+  const p=product;
+  const exTax=nval('exTax'), fx=nval('fx')||6.7;
+  const portFee=mode==='exw'?0:nval('portFee');
+  let chargeQty=0,totalPCS=0,totalMeters=0,totalSqm=0,palletCost=0,cont=container,itemName='',specification='';
+  if(p==='UV'){
+    cont='20GP';
+    const d=UV_DATA[`${uvLen}_${uvThk}`]||{};
+    totalPCS=d.qty||0; chargeQty=totalPCS; palletCost=PALLET_UV;
+    itemName=`UV Marble PVC Sheet${uvFilm==='gilded'?' (Gilded)':''}`;
+    specification=`${uvLen}m × 1.22m × ${uvThk}mm`;
+  } else if(p==='ASA'||p==='WPC'){
+    const C=CONTAINERS[cont];
+    const L=nval('vol_L')||2.9,Pw=nval('vol_Pw')||0.23,Ph=nval('vol_Ph')||0.21,N=nval('vol_N')||8;
+    const nL=flo(C.L/L);
+    const packs=Math.max(nL*flo(C.W/Pw)*flo(C.H/Ph),nL*flo(C.W/Ph)*flo(C.H/Pw));
+    totalPCS=packs*N; totalMeters=totalPCS*L; chargeQty=totalMeters;
+    const asaModel=$('asaModel').value;
+    if(p==='ASA'){
+      itemName='ASA Co-extrusion WPC Wall Panel';
+      specification=asaModel?`${asaModel}mm, L=${L}m`:`L=${L}m`;
+    } else {
+      itemName='WPC Decorative Grille';
+      specification=`L=${L}m`;
+    }
+  } else if(p==='PE'){
+    const kgpm=nval('pe_kgpm')||1;
+    totalMeters=flo(PAYLOAD/kgpm); chargeQty=totalMeters;
+    itemName='PE Wood Plastic Composite Profile';
+    specification=`${kgpm} kg/m`;
+  } else if(p==='WOOD'){
+    const L=+$('wood_L').value,thk=+$('wood_thk').value,den=+$('wood_den').value;
+    const kgPS=1.22*L*(thk/1000)*den;
+    totalPCS=flo((PAYLOAD-1500)/(kgPS||1));
+    totalSqm=totalPCS*1.22*L; chargeQty=totalSqm;
+    palletCost=PALLET_WOOD;
+    itemName='Wood Veneer Panel';
+    specification=`${L}m × 1.22m × ${thk}mm`;
+  }
+  const exFactoryCost=exTax*chargeQty;
+  let fobRmbUnit=0,fobRmbTotalV=0;
+  if(mode==='fob'||mode==='exw'){
+    const margin=nval('margin')/100;
+    const overhead=mode==='exw'?palletCost:(portFee+palletCost);
+    fobRmbUnit=exTax*(1+margin)+(chargeQty>0?overhead/chargeQty:0);
+    fobRmbTotalV=fobRmbUnit*chargeQty;
+    if(mode==='fob'&&rebatePct>0){
+      const rebateRmb=exFactoryCost/1.13*0.13;
+      fobRmbTotalV-=rebateRmb*rebatePct/100;
+      fobRmbUnit=chargeQty>0?fobRmbTotalV/chargeQty:0;
+    }
+  } else if(mode==='reverse'){
+    const targetUsd=nval('targetUsd');
+    fobRmbUnit=targetUsd*fx;
+    fobRmbTotalV=fobRmbUnit*chargeQty;
+  }
+  lastCalc={
+    product:p, mode, container:cont,
+    chargeQty, totalPCS, totalMeters, totalSqm,
+    itemName, specification,
+    fobUsdUnit:fobRmbUnit/fx,
+    fobUsdTotal:fobRmbTotalV/fx,
+    fx
+  };
+}
+
+// 包一层：每次 calc 调用后自动缓存
+const _origCalcFn=calc;
+calc=function(){
+  _origCalcFn();
+  cacheLastCalc();
+};
+calc(); // 跑一次填充 lastCalc
+
+// 生成报价单按钮
+$('genBtn').addEventListener('click',()=>{
+  if(!lastCalc||lastCalc.chargeQty<=0||lastCalc.fobUsdUnit<=0){
+    alert('Please complete calculation first / 请先完成计算');
+    return;
+  }
+  $('custModal').classList.remove('hidden');
+});
+$('custCancel').addEventListener('click',()=>$('custModal').classList.add('hidden'));
+$('custOk').addEventListener('click',()=>{
+  const company=$('custCompany').value.trim();
+  const attn=$('custAttn').value.trim();
+  if(!company||!attn){
+    alert('Company and Contact Person are required / 公司名和联系人必填');
+    return;
+  }
+  $('custModal').classList.add('hidden');
+  buildQuotation({
+    company, attn,
+    tel:$('custTel').value.trim(),
+    email:$('custEmail').value.trim(),
+    address:$('custAddress').value.trim()
+  });
+});
+
+function pad2(n){return String(n).padStart(2,'0');}
+function genQuoteNo(){
+  const d=new Date();
+  return `EVK-${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}-${pad2(d.getHours())}${pad2(d.getMinutes())}`;
+}
+function fmtDate(){
+  const d=new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
+function fmtMoney(n){
+  return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function buildQuotation(cust){
+  const lc=lastCalc;
+  const isExw=lc.mode==='exw';
+  const incoterm=isExw?'EXW Linyi, Shandong, China':'FOB Qingdao, China';
+  const tradeLabel=isExw?'EXW':'FOB';
+  let qtyStr,qtyUnit;
+  if(lc.product==='UV'){
+    qtyStr=fmtMoney(lc.chargeQty); qtyUnit='Sheets';
+  } else if(lc.product==='WOOD'){
+    qtyStr=fmtMoney(lc.chargeQty); qtyUnit='Sqm';
+  } else {
+    qtyStr=fmtMoney(lc.chargeQty); qtyUnit='Meters';
+  }
+  const containerInfo=lc.product==='UV'?'1x20GP':`1x${lc.container}`;
+
+  const html=`
+    <div class="quote-logo">
+      <img src="data:image/jpeg;base64,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4XN9mh4Xu4nDgGHHvPeVDPZtWdGNKUl6qaWnVY6ncbmMZuaXF5+OTn+poH2qKa3Nb+g1ssdRBjlG8EcbfuPwXRmnZeJoIJmhs0TJGg5Ac0ED4rIBjkrVpZejVJyT0eMLpjP10IqtbtIpY1X5/AREV8gCIiAIiIAiIgCEZGERAV24wVNnqXV9EOKmccyxdg8fLx7FL2y4U1fD1kD9x9Zh+s3zW04AjBVduljmhmNbaXOjkG5jDsfD8uSzp06trJzpLMXxXTvX0LClGqsT0fX6ljK5ze4Hi91bMOJdMS0Ac8nP4qeotTmJ3U3OmlY9uxcG7jzb+S+3COluNbT19vnimeHt6yMPAJAPPdUtobl9Sj2b1T4c/cTW+9Qm95aM9WjS8UT2T1j2zkDPVcPug+PerHGxsbQxjQ1o5ADAC+g7JkLVt7Wlbx3aawValWdR5kz6iZXl72saXPcGgcyTgKzkjPSEgKJrtQW6mBDZeveM+7Hv8+SjWVF1vji2JppaM83d/fvzPoqdW9hF7sPWl0RLGjJ6vRElX3NzpvZLc0TTu2Lhu1nie9bluoxSRYLzJK7eSR3NxXy20FPQwdXC3c/Wcebj4rbXVGlNvtKvHpyX51PJSXsx4BERWiMIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIDUuFuo65nDUwNeRydycPVV+t0meLio6kEDk2UfiFa0VataUa2s46kkK04cGUgW/UFI7EXtBA/9KXI+GVkbNqVu2Kzbvjz+CuaKt/jkvZm15kvpLfGKKaDqWbI/TB6Bq9RWC6VTiaucNHe+QvI9FcEXS2dB+3JvzPPSJL2UkQ1Bp2hpyHTcVS8HPv8A1fh+amGtDRgAADsX1Fcp0YUliCwQynKTzJhERSHIREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQH//Z" alt="EVOKEWPC" style="max-width:180px;height:auto;"/>
+    </div>
+    <div class="quote-title">QUOTATION</div>
+    <div class="quote-meta">
+      <div><strong>No.:</strong> ${genQuoteNo()}</div>
+      <div><strong>Date:</strong> ${fmtDate()}</div>
+      <div><strong>Validity:</strong> 15 days</div>
+    </div>
+    <div class="quote-tofrom">
+      <div class="quote-block">
+        <h4>To</h4>
+        <p><span class="label">Company:</span> ${cust.company}</p>
+        <p><span class="label">ATTN:</span> ${cust.attn}</p>
+        ${cust.address?`<p><span class="label">Address:</span> ${cust.address}</p>`:''}
+        ${cust.tel?`<p><span class="label">Tel:</span> ${cust.tel}</p>`:''}
+        ${cust.email?`<p><span class="label">Email:</span> ${cust.email}</p>`:''}
+      </div>
+      <div class="quote-block">
+        <h4>From</h4>
+        <p><span class="label">Company:</span> SHANDONG YULIN NEW DECORATION MATERIALS CO., LTD.</p>
+        <p><span class="label">ATTN:</span> Lance</p>
+        <p><span class="label">Address:</span> Tangjiatun, Tanyi Town, Fei County, Linyi City, Shandong Province, China</p>
+        <p><span class="label">Tel:</span> +86 137 9297 7082</p>
+        <p><span class="label">Email:</span> lance@evokewpc.com</p>
+      </div>
+    </div>
+    <div class="quote-section-title">Product Quotation</div>
+    <table class="quote-table">
+      <thead>
+        <tr>
+          <th style="width:36px;">No.</th>
+          <th style="width:auto;">Item</th>
+          <th style="width:auto;">Specification</th>
+          <th style="width:80px;">Quantity</th>
+          <th style="width:60px;">Unit</th>
+          <th style="width:100px;">${tradeLabel} Price</th>
+          <th style="width:110px;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="center">1</td>
+          <td>${lc.itemName}</td>
+          <td>${lc.specification}<br><span style="color:#888;font-size:11px;">Loading: ${containerInfo}</span></td>
+          <td class="num">${qtyStr}</td>
+          <td class="center">${qtyUnit}</td>
+          <td class="num">USD ${fmtMoney(lc.fobUsdUnit)}</td>
+          <td class="num">USD ${fmtMoney(lc.fobUsdTotal)}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="6" style="text-align:right;">TOTAL:</td>
+          <td class="num">USD ${fmtMoney(lc.fobUsdTotal)}</td>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="quote-terms">
+      <h4>Trade Terms</h4>
+      <div class="row"><div class="k">Incoterms:</div><div>${incoterm}</div></div>
+      <div class="row"><div class="k">Payment Terms:</div><div>30% T/T deposit, 70% balance against copy of B/L</div></div>
+      <div class="row"><div class="k">Packing:</div><div>Standard export packing, suitable for ocean transportation</div></div>
+      <div class="row"><div class="k">Validity:</div><div>15 days from quotation date</div></div>
+      <div class="row"><div class="k">Remarks:</div><div>Prices are for reference; subject to final confirmation based on quantity, color, packing, and freight.</div></div>
+    </div>
+    <div class="quote-footer">
+      <div>
+        <div>Thank you for your inquiry.</div>
+        <div>We look forward to your order.</div>
+      </div>
+      <div class="sig">
+        <div>Best regards,</div>
+        <div class="name">Lance</div>
+        <div>Foreign Trade Sales</div>
+        <div>SHANDONG YULIN NEW DECORATION MATERIALS CO., LTD.</div>
+      </div>
+    </div>
+    <div class="quote-bottom-strip">
+      EVOKEWPC · WPC Outdoor Wall Panels · Shandong Yulin New Decoration Materials Co., Ltd.
+    </div>
+  `;
+  $('quotePage').innerHTML=html;
+  $('quoteOverlay').classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+$('quoteClose').addEventListener('click',()=>$('quoteOverlay').classList.add('hidden'));
+$('quotePrint').addEventListener('click',()=>window.print());
 </script>
 </body>
 </html>
