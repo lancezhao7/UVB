@@ -221,7 +221,7 @@
 <div style="max-width:860px;margin:0 auto;">
   <div class="header">
     <span class="header-brand">EVOKE WPC</span>
-    <span class="header-sub">报价计算器 v3.5</span>
+    <span class="header-sub">报价计算器 v3.8</span>
   </div>
 
   <!-- 模式切换 -->
@@ -240,6 +240,7 @@
         <div class="pill" data-val="ASA">ASA 户外墙板</div>
         <div class="pill" data-val="WPC">WPC 格栅</div>
         <div class="pill" data-val="WOOD">木饰面</div>
+        <div class="pill" data-val="STICKER">墙贴</div>
       </div>
     </div>
   </div>
@@ -326,6 +327,50 @@
         </div>
         <div class="field"><label>密度 (kg/m³)</label>
           <select id="wood_den"><option value="650">650</option><option value="700">700</option></select>
+        </div>
+      </div>
+
+      <!-- 墙贴 -->
+      <div class="card hidden" id="stickerBox">
+        <div class="card-title">墙贴参数 <span class="tag-auto">AUTO-FILL</span></div>
+        <div class="field">
+          <label>材质</label>
+          <div class="pill-group" id="stickerMaterialPills">
+            <div class="pill active" data-val="PVC">PVC</div>
+            <div class="pill" data-val="PET">PET</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>系列</label>
+          <select id="sticker_series"></select>
+        </div>
+        <div class="field">
+          <label>规格</label>
+          <select id="sticker_spec"></select>
+        </div>
+        <div class="field hidden" id="stickerFilmField">
+          <label>膜厚</label>
+          <div class="pill-group" id="stickerFilmPills"></div>
+        </div>
+        <div class="field">
+          <label>报价方式</label>
+          <div class="pill-group" id="stickerUnitPills">
+            <div class="pill active" data-val="pc">Per pc</div>
+            <div class="pill" data-val="sqm">Per sqm</div>
+          </div>
+        </div>
+        <div class="field"><label>毛重 kg/箱 (可选，用于拼柜重量)</label><input id="sticker_kgbox" value="" placeholder="空则不计重量"/></div>
+        <div class="specs-row">
+          <div class="spec-item"><div class="spec-label">规格</div><div class="spec-val" id="st_s_spec">—</div></div>
+          <div class="spec-item"><div class="spec-label">㎡/张</div><div class="spec-val" id="st_s_sqm">—</div></div>
+          <div class="spec-item"><div class="spec-label">出厂价/㎡</div><div class="spec-val" id="st_s_per_sqm">—</div></div>
+          <div class="spec-item"><div class="spec-label">单片价</div><div class="spec-val" id="st_s_per_pc">—</div></div>
+        </div>
+        <div class="specs-row mt">
+          <div class="spec-item"><div class="spec-label">张/箱</div><div class="spec-val" id="st_s_per_box">—</div></div>
+          <div class="spec-item"><div class="spec-label">箱规cm</div><div class="spec-val" id="st_s_box_dim">—</div></div>
+          <div class="spec-item"><div class="spec-label">立方/箱</div><div class="spec-val" id="st_s_box_cbm">—</div></div>
+          <div class="spec-item"><div class="spec-label">40HQ张数</div><div class="spec-val" id="st_s_qty_hq">—</div></div>
         </div>
       </div>
 
@@ -570,6 +615,127 @@ const UV_DATA={
   "2.90_3.0":{price:66.13,qty:1200,kg:22.50,perPallet:100}
 };
 const CONTAINERS={"20GP":{L:5.90,W:2.35,H:2.39},"40GP":{L:12.03,W:2.35,H:2.39},"40HQ":{L:12.03,W:2.35,H:2.70}};
+
+// 墙贴数据：按材质→系列→规格→(膜厚)分层
+// PVC每个规格固定一个膜厚(23s)，PET每个规格有多档膜厚
+const STICKER_DATA={
+  PVC:{
+    pvc_plain:{
+      label:'Plain Print Series (Shrink-wrapped Roll)',
+      specs:[
+        {key:'60x3',  label:'60cm × 3m',   sqm:1.8, thk:3,   perBox:20, boxDim:'58×47.5×61', boxCbm:0.17, qtyHQ:8000,
+          films:[{film:'23s', perSqm:11.6, perPc:20.9}]},
+        {key:'120x3', label:'1.2m × 3m',   sqm:3.6, thk:3,   perBox:12, boxDim:'122×37×49', boxCbm:0.22, qtyHQ:3684,
+          films:[{film:'23s', perSqm:11.6, perPc:41.8}]}
+      ]
+    },
+    pvc_carved:{
+      label:'Fluted Panel Series (Shrink-wrapped Roll)',
+      specs:[
+        {key:'60x3',  label:'60cm × 3m',   sqm:1.8, thk:3,   perBox:20, boxDim:'58×47.5×61', boxCbm:0.17, qtyHQ:8000,
+          films:[{film:'23s', perSqm:13, perPc:23.4}]},
+        {key:'120x3', label:'1.2m × 3m',   sqm:3.6, thk:3,   perBox:12, boxDim:'122×37×49', boxCbm:0.22, qtyHQ:3684,
+          films:[{film:'23s', perSqm:13, perPc:46.8}]}
+      ]
+    },
+    pvc_soft_sheet:{
+      label:'Soft Stone Series (Sheet)',
+      specs:[
+        {key:'30x60', label:'30cm × 60cm', sqm:0.18, thk:2.5, perBox:200, boxDim:'61×31×51', boxCbm:0.10, qtyHQ:136000,
+          films:[{film:'23s', perSqm:9.8, perPc:1.76}]},
+        {key:'60x60', label:'60cm × 60cm', sqm:0.36, thk:2.5, perBox:100, boxDim:'61×61×25', boxCbm:0.09, qtyHQ:75500,
+          films:[{film:'23s', perSqm:9.8, perPc:3.53}]}
+      ]
+    },
+    pvc_soft_roll:{
+      label:'Soft Stone Series (Shrink-wrapped Roll)',
+      specs:[
+        {key:'60x3',  label:'60cm × 3m',   sqm:1.8, thk:2.5, perBox:20, boxDim:'58×47.5×61', boxCbm:0.17, qtyHQ:8000,
+          films:[{film:'23s', perSqm:9.8, perPc:17.64}]},
+        {key:'120x3', label:'1.2m × 3m',   sqm:3.6, thk:2.5, perBox:12, boxDim:'122×37×49', boxCbm:0.22, qtyHQ:3684,
+          films:[{film:'23s', perSqm:9.8, perPc:35.28}]}
+      ]
+    }
+  },
+  PET:{
+    pet_regular_sheet:{
+      label:'Marble Regular Series (Sheet)',
+      specs:[
+        {key:'30x30', label:'30cm × 30cm', sqm:0.09, thk:2.5, perBox:400, boxDim:'61×61×25', boxCbm:0.09, qtyHQ:302000,
+          films:[{film:'10s', perSqm:5.5},{film:'13s', perSqm:5.9}]},
+        {key:'30x60', label:'30cm × 60cm', sqm:0.18, thk:2.5, perBox:200, boxDim:'61×31×51', boxCbm:0.10, qtyHQ:136000,
+          films:[{film:'10s', perSqm:5.5},{film:'13s', perSqm:5.9}]},
+        {key:'60x60', label:'60cm × 60cm', sqm:0.36, thk:2.5, perBox:100, boxDim:'61×61×25', boxCbm:0.09, qtyHQ:75500,
+          films:[{film:'10s', perSqm:5.5},{film:'13s', perSqm:5.9}]}
+      ]
+    },
+    pet_regular_large_roll:{
+      label:'Marble Regular Series (Large Roll, 10pcs/roll)',
+      specs:[
+        {key:'60x3',  label:'60cm × 3m',   sqm:1.8, thk:2.5, perBox:20, boxDim:'122×31×31', boxCbm:0.12, qtyHQ:11200,
+          films:[{film:'10s', perSqm:6.2},{film:'13s', perSqm:6.7}]},
+        {key:'120x3', label:'1.2m × 3m',   sqm:3.6, thk:2.5, perBox:10, boxDim:'122×31×31', boxCbm:0.12, qtyHQ:5600,
+          films:[{film:'10s', perSqm:6.2},{film:'13s', perSqm:6.7}]}
+      ]
+    },
+    pet_regular_single_roll:{
+      label:'Marble Regular Series (Single Roll Shrink-wrapped)',
+      specs:[
+        {key:'60x3',  label:'60cm × 3m',   sqm:1.8, thk:2.5, perBox:24, boxDim:'122×33×44', boxCbm:0.18, qtyHQ:8880,
+          films:[{film:'10s', perSqm:6.6},{film:'13s', perSqm:7.1}]},
+        {key:'120x3', label:'1.2m × 3m',   sqm:3.6, thk:2.5, perBox:12, boxDim:'122×33×44', boxCbm:0.18, qtyHQ:4440,
+          films:[{film:'10s', perSqm:6.6},{film:'13s', perSqm:7.1}]}
+      ]
+    },
+    pet_golden_sheet:{
+      label:'Marble Gilded Series (Sheet)',
+      specs:[
+        {key:'30x30', label:'30cm × 30cm', sqm:0.09, thk:2.5, perBox:400, boxDim:'61×61×25', boxCbm:0.09, qtyHQ:302000,
+          films:[{film:'10s', perSqm:6.6},{film:'13s', perSqm:7.0}]},
+        {key:'30x60', label:'30cm × 60cm', sqm:0.18, thk:2.5, perBox:200, boxDim:'61×31×51', boxCbm:0.10, qtyHQ:136000,
+          films:[{film:'10s', perSqm:6.6},{film:'13s', perSqm:7.0}]},
+        {key:'60x60', label:'60cm × 60cm', sqm:0.36, thk:2.5, perBox:100, boxDim:'61×61×25', boxCbm:0.09, qtyHQ:75500,
+          films:[{film:'10s', perSqm:6.6},{film:'13s', perSqm:7.0}]}
+      ]
+    },
+    pet_golden_large_roll:{
+      label:'Marble Gilded Series (Large Roll, 10pcs/roll)',
+      specs:[
+        {key:'60x3',  label:'60cm × 3m',   sqm:1.8, thk:2.5, perBox:20, boxDim:'122×31×31', boxCbm:0.12, qtyHQ:11200,
+          films:[{film:'10s', perSqm:6.6},{film:'13s', perSqm:7.1}]},
+        {key:'120x3', label:'1.2m × 3m',   sqm:3.6, thk:2.5, perBox:10, boxDim:'122×31×31', boxCbm:0.12, qtyHQ:5600,
+          films:[{film:'10s', perSqm:6.6},{film:'13s', perSqm:7.1}]}
+      ]
+    },
+    pet_golden_single_roll:{
+      label:'Marble Gilded Series (Single Roll Shrink-wrapped)',
+      specs:[
+        {key:'60x3',  label:'60cm × 3m',   sqm:1.8, thk:2.5, perBox:24, boxDim:'122×33×44', boxCbm:0.18, qtyHQ:8880,
+          films:[{film:'10s', perSqm:7.0},{film:'13s', perSqm:7.5}]},
+        {key:'120x3', label:'1.2m × 3m',   sqm:3.6, thk:2.5, perBox:12, boxDim:'122×33×44', boxCbm:0.18, qtyHQ:4440,
+          films:[{film:'10s', perSqm:7.0},{film:'13s', perSqm:7.5}]}
+      ]
+    },
+    pet_water_ripple:{
+      label:'Water Ripple Series (Roll)',
+      specs:[
+        {key:'60x3',  label:'60cm × 3m',   sqm:1.8, thk:2.5, perBox:24, boxDim:'122×33×44', boxCbm:0.18, qtyHQ:8880,
+          films:[{film:'20s', perSqm:10.5},{film:'25s', perSqm:12.5}]},
+        {key:'120x3', label:'1.2m × 3m',   sqm:3.6, thk:2.5, perBox:12, boxDim:'122×33×44', boxCbm:0.18, qtyHQ:4440,
+          films:[{film:'20s', perSqm:10.5},{film:'25s', perSqm:12.5}]}
+      ]
+    },
+    pet_metal_mirror:{
+      label:'Metallic Shattered Pattern Series (Roll)',
+      specs:[
+        {key:'60x3',  label:'60cm × 3m',   sqm:1.8, thk:2.5, perBox:24, boxDim:'122×33×44', boxCbm:0.18, qtyHQ:8880,
+          films:[{film:'20s', perSqm:11.0},{film:'25s', perSqm:13.0}]},
+        {key:'120x3', label:'1.2m × 3m',   sqm:3.6, thk:2.5, perBox:12, boxDim:'122×33×44', boxCbm:0.18, qtyHQ:4440,
+          films:[{film:'20s', perSqm:11.0},{film:'25s', perSqm:13.0}]}
+      ]
+    }
+  }
+};
 const PAYLOAD=28000, COMM=0.15;
 // 硬编码托盘费（不在 UI 显示）
 const PALLET_UV=12*120;    // 1440
@@ -580,6 +746,7 @@ let uvLen="2.44", uvThk="2.0", uvFilm="normal";
 let rebatePct=0, userOverrideRebate=false;
 let genIsMulti=false;   // false=单品 true=多品
 let genDocType='quote'; // 'quote' | 'pi'
+let stickerMaterial='PVC', stickerSeries='pvc_plain', stickerSpec='60x3', stickerFilm='23s', stickerUnit='pc';
 
 const $=id=>document.getElementById(id);
 const flo=x=>Math.floor(x>0?x:0);
@@ -641,6 +808,9 @@ document.querySelectorAll('#productPills .pill').forEach(p=>p.addEventListener('
   userOverrideRebate=false;
   updateProductUI();
   applyMode();
+  // 切到墙贴时自动填价
+  if(product==='STICKER') syncStickerFields();
+  else if(product==='UV') syncUVFields();
   calc();
 }));
 
@@ -678,6 +848,134 @@ $('asaModel').addEventListener('change',()=>{
   calc();
 });
 
+// ====== 墙贴 ======
+function rebuildStickerSeriesOptions(){
+  const sel=$('sticker_series');
+  sel.innerHTML='';
+  const mat=STICKER_DATA[stickerMaterial];
+  Object.keys(mat).forEach(key=>{
+    const o=document.createElement('option');
+    o.value=key;
+    o.textContent=mat[key].label;
+    sel.appendChild(o);
+  });
+  // 当前系列如果不在新材质里，重置到第一个
+  if(!mat[stickerSeries]){
+    stickerSeries=Object.keys(mat)[0];
+  }
+  sel.value=stickerSeries;
+}
+function rebuildStickerSpecOptions(){
+  const sel=$('sticker_spec');
+  sel.innerHTML='';
+  const series=STICKER_DATA[stickerMaterial][stickerSeries];
+  series.specs.forEach(sp=>{
+    const o=document.createElement('option');
+    o.value=sp.key;
+    o.textContent=`${sp.label} (${sp.thk}mm)`;
+    sel.appendChild(o);
+  });
+  if(!series.specs.find(sp=>sp.key===stickerSpec)){
+    stickerSpec=series.specs[0].key;
+  }
+  sel.value=stickerSpec;
+}
+function rebuildStickerFilmPills(){
+  const sp=getCurrentStickerSpec();
+  const wrap=$('stickerFilmPills');
+  const field=$('stickerFilmField');
+  wrap.innerHTML='';
+  // PVC只有一档膜厚，不显示选择
+  if(!sp || sp.films.length<=1){
+    field.classList.add('hidden');
+    stickerFilm=sp?sp.films[0].film:'23s';
+    return;
+  }
+  field.classList.remove('hidden');
+  // 当前膜厚不在新spec里，重置到第一档
+  if(!sp.films.find(f=>f.film===stickerFilm)){
+    stickerFilm=sp.films[0].film;
+  }
+  sp.films.forEach(f=>{
+    const btn=document.createElement('div');
+    btn.className='pill'+(f.film===stickerFilm?' active':'');
+    btn.dataset.val=f.film;
+    btn.textContent=f.film;
+    btn.addEventListener('click',()=>{
+      stickerFilm=f.film;
+      wrap.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+      btn.classList.add('active');
+      userOverrideRebate=false;
+      syncStickerFields();
+      calc();
+    });
+    wrap.appendChild(btn);
+  });
+}
+function getCurrentStickerSpec(){
+  const series=STICKER_DATA[stickerMaterial][stickerSeries];
+  return series.specs.find(sp=>sp.key===stickerSpec)||series.specs[0];
+}
+function getCurrentStickerPrice(){
+  // 返回 {perSqm, perPc} — PET没有perPc则用perSqm*sqm推算
+  const sp=getCurrentStickerSpec();
+  const f=sp.films.find(x=>x.film===stickerFilm)||sp.films[0];
+  const perSqm=f.perSqm;
+  const perPc=(f.perPc!=null)?f.perPc:(perSqm*sp.sqm);
+  return {perSqm, perPc};
+}
+function syncStickerFields(){
+  const sp=getCurrentStickerSpec();
+  const pr=getCurrentStickerPrice();
+  $('st_s_spec').textContent=sp.label;
+  $('st_s_sqm').textContent=sp.sqm+' ㎡';
+  $('st_s_per_sqm').textContent='¥'+pr.perSqm.toFixed(2);
+  $('st_s_per_pc').textContent='¥'+pr.perPc.toFixed(2);
+  $('st_s_per_box').textContent=sp.perBox+' pcs';
+  $('st_s_box_dim').textContent=sp.boxDim+' cm';
+  $('st_s_box_cbm').textContent=sp.boxCbm+' m³';
+  $('st_s_qty_hq').textContent=sp.qtyHQ+' pcs';
+  if(stickerUnit==='pc'){
+    $('exTax').value=pr.perPc.toFixed(2);
+  } else {
+    $('exTax').value=pr.perSqm.toFixed(2);
+  }
+}
+document.querySelectorAll('#stickerMaterialPills .pill').forEach(p=>p.addEventListener('click',()=>{
+  document.querySelectorAll('#stickerMaterialPills .pill').forEach(x=>x.classList.remove('active'));
+  p.classList.add('active');
+  stickerMaterial=p.dataset.val;
+  userOverrideRebate=false;
+  rebuildStickerSeriesOptions();
+  rebuildStickerSpecOptions();
+  rebuildStickerFilmPills();
+  syncStickerFields();
+  calc();
+}));
+$('sticker_series').addEventListener('change',()=>{
+  stickerSeries=$('sticker_series').value;
+  userOverrideRebate=false;
+  rebuildStickerSpecOptions();
+  rebuildStickerFilmPills();
+  syncStickerFields();
+  calc();
+});
+$('sticker_spec').addEventListener('change',()=>{
+  stickerSpec=$('sticker_spec').value;
+  userOverrideRebate=false;
+  rebuildStickerFilmPills();
+  syncStickerFields();
+  calc();
+});
+document.querySelectorAll('#stickerUnitPills .pill').forEach(p=>p.addEventListener('click',()=>{
+  document.querySelectorAll('#stickerUnitPills .pill').forEach(x=>x.classList.remove('active'));
+  p.classList.add('active');
+  stickerUnit=p.dataset.val;
+  userOverrideRebate=false;
+  syncStickerFields();
+  calc();
+}));
+
 // ====== 贴退税滑块 / 快捷按钮 ======
 $('rebateSlider').addEventListener('input',e=>{
   rebatePct=+e.target.value;
@@ -707,12 +1005,21 @@ function updateProductUI(){
   $('wpcWidthField').classList.toggle('hidden',p!=='WPC');
   $('wpcThkField').classList.toggle('hidden',p!=='WPC');
   $('woodBox').classList.toggle('hidden',p!=='WOOD');
-  $('containerCard').classList.toggle('hidden',p==='UV');
+  $('stickerBox').classList.toggle('hidden',p!=='STICKER');
+  $('containerCard').classList.toggle('hidden',p==='UV'||p==='STICKER');
   // 出厂价标签
-  const labels={UV:'含税出厂价 (RMB/张)',ASA:'含税出厂价 (RMB/m)',WPC:'含税出厂价 (RMB/m)',WOOD:'含税出厂价 (RMB/㎡)'};
-  $('exTaxLabel').textContent=labels[p];
+  let exLabel;
+  if(p==='UV') exLabel='含税出厂价 (RMB/张)';
+  else if(p==='ASA'||p==='WPC') exLabel='含税出厂价 (RMB/m)';
+  else if(p==='WOOD') exLabel='含税出厂价 (RMB/㎡)';
+  else if(p==='STICKER') exLabel=stickerUnit==='pc'?'含税出厂价 (RMB/片)':'含税出厂价 (RMB/㎡)';
+  $('exTaxLabel').textContent=exLabel;
   // 装柜结果标签
-  $('lblMeters').textContent=p==='UV'?'装柜张数':(p==='WOOD'?'总平方米':'每柜总米数');
+  let metersLabel='每柜总米数';
+  if(p==='UV') metersLabel='装柜张数';
+  else if(p==='WOOD') metersLabel='总平方米';
+  else if(p==='STICKER') metersLabel=stickerUnit==='pc'?'装柜张数':'装柜总㎡';
+  $('lblMeters').textContent=metersLabel;
 }
 
 // ====== 模式 UI 切换 ======
@@ -724,7 +1031,8 @@ function applyMode(){
   $('impliedKpiGrid').classList.toggle('hidden',mode!=='reverse');
   $('statusBadge').classList.toggle('hidden',mode!=='reverse');
   // 反推模式的目标价单位
-  const targetUnits={UV:'USD/张',ASA:'USD/m',WPC:'USD/m',WOOD:'USD/㎡'};
+  const targetUnits={UV:'USD/张',ASA:'USD/m',WPC:'USD/m',WOOD:'USD/㎡',
+    STICKER:stickerUnit==='pc'?'USD/pc':'USD/㎡'};
   $('targetLabel').textContent=`目标 FOB 单价 (${targetUnits[product]})`;
   // 价格区标题
   if(mode==='exw'){
@@ -775,6 +1083,18 @@ function calc(){
     totalSqm=sheets*1.22*L;
     totalPCS=sheets; chargeQty=totalSqm;
     unitLabel='/㎡'; palletCost=PALLET_WOOD;
+  }
+  else if(p==='STICKER'){
+    cont='40HQ'; // 墙贴默认40HQ（跟价格表对齐）
+    const sp=getCurrentStickerSpec();
+    totalPCS=sp.qtyHQ;
+    totalSqm=totalPCS*sp.sqm;
+    if(stickerUnit==='pc'){
+      chargeQty=totalPCS; unitLabel='/pc';
+    } else {
+      chargeQty=totalSqm; unitLabel='/㎡';
+    }
+    palletCost=0; // 墙贴装箱不上托盘
   }
 
   const exFactoryCost=exTax*chargeQty;
@@ -844,6 +1164,12 @@ function calc(){
     $('metersOut').innerHTML=totalPCS>0?fmtN(totalPCS)+'<span class="kpi-unit">张</span>':'—';
   } else if(p==='WOOD'){
     $('metersOut').innerHTML=totalSqm>0?fmtN(totalSqm)+'<span class="kpi-unit">㎡</span>':'—';
+  } else if(p==='STICKER'){
+    if(stickerUnit==='pc'){
+      $('metersOut').innerHTML=totalPCS>0?fmtN(totalPCS)+'<span class="kpi-unit">张</span>':'—';
+    } else {
+      $('metersOut').innerHTML=totalSqm>0?fmtN(totalSqm)+'<span class="kpi-unit">㎡</span>':'—';
+    }
   } else {
     $('metersOut').innerHTML=totalMeters>0?fmtN(totalMeters)+'<span class="kpi-unit">m</span>':'—';
   }
@@ -904,16 +1230,20 @@ function calc(){
 
   // 备注
   const modeName={fob:'正算FOB',reverse:'反推FOB',exw:'EXW'}[mode];
-  const prodName={UV:'UV板',ASA:'ASA',WPC:'WPC',WOOD:'木饰面'}[p];
+  const prodName={UV:'UV板',ASA:'ASA',WPC:'WPC',WOOD:'木饰面',STICKER:'墙贴'}[p];
   let detail='';
   if(p==='UV') detail=`${uvLen}m × ${uvThk}mm | ${totalPCS}张${uvFilm==='gilded'?' | 鎏金':''}`;
   else if(p==='ASA'||p==='WPC') detail=`${cont} | ${totalPCS}支 | ${fmtN(totalMeters)}m`;
   else if(p==='WOOD') detail=`${cont} | ${totalPCS}张 | ${f2(totalSqm)}㎡`;
+  else if(p==='STICKER'){
+    const sp=getCurrentStickerSpec();
+    detail=`${cont} | ${sp.label} | ${totalPCS}张 | ${f2(totalSqm)}㎡`;
+  }
   $('noteStrip').textContent=`${prodName} · ${modeName} | ${detail} | 港杂¥${portFee}${rebatePct>0?' | 贴退税'+f2(rebatePct)+'%':''}`;
 }
 
 // ====== 输入框监听 ======
-['exTax','margin','fx','portFee','targetUsd','vol_L','vol_Pw','vol_Ph','vol_N','vol_kgpm','wpc_W','wpc_T','wood_L','wood_thk','wood_den']
+['exTax','margin','fx','portFee','targetUsd','vol_L','vol_Pw','vol_Ph','vol_N','vol_kgpm','wpc_W','wpc_T','wood_L','wood_thk','wood_den','sticker_kgbox']
   .forEach(id=>{const el=$(id);if(!el)return;
     const handler=()=>{userOverrideRebate=false;calc();};
     el.addEventListener('input',handler);
@@ -926,6 +1256,10 @@ updateProductUI();
 applyMode();
 buildUVMatrix();
 syncUVFields();
+rebuildStickerSeriesOptions();
+rebuildStickerSpecOptions();
+rebuildStickerFilmPills();
+syncStickerFields();
 calc();
 
 // ====== 报价单生成逻辑 ======
@@ -988,6 +1322,27 @@ function cacheLastCalc(){
     const perSheetSqm=1.22*L;
     perUnitCbm=perSheetCbm/perSheetSqm;
     perUnitKg=kgPS/perSheetSqm;
+  } else if(p==='STICKER'){
+    cont='40HQ';
+    const sp=getCurrentStickerSpec();
+    const series=STICKER_DATA[stickerMaterial][stickerSeries];
+    const pr=getCurrentStickerPrice();
+    totalPCS=sp.qtyHQ;
+    totalSqm=totalPCS*sp.sqm;
+    chargeQty=stickerUnit==='pc'?totalPCS:totalSqm;
+    itemName=series.label;
+    specification=`${sp.label}, ${sp.thk}mm${sp.films.length>1?', '+stickerFilm+' film':''}`;
+    // 每单位(pc或㎡)占的CBM
+    const perPcCbm=sp.boxCbm/sp.perBox;
+    perUnitCbm=stickerUnit==='pc'?perPcCbm:perPcCbm/sp.sqm;
+    // 重量由用户手填
+    const kgBox=nval('sticker_kgbox');
+    if(kgBox>0){
+      const perPcKg=kgBox/sp.perBox;
+      perUnitKg=stickerUnit==='pc'?perPcKg:perPcKg/sp.sqm;
+    } else {
+      perUnitKg=0;
+    }
   }
   const exFactoryCost=exTax*chargeQty;
   let fobRmbUnit=0,fobRmbTotalV=0;
@@ -1182,6 +1537,10 @@ function buildQuotation(cust, seller, docType){
     qtyStr=fmtMoney(lc.chargeQty); qtyUnit='Sheet'; qtyUnitPlural='Sheets';
   } else if(lc.product==='WOOD'){
     qtyStr=fmtMoney(lc.chargeQty); qtyUnit='Sqm'; qtyUnitPlural='Sqm';
+  } else if(lc.product==='STICKER'){
+    qtyStr=fmtMoney(lc.chargeQty);
+    if(stickerUnit==='pc'){qtyUnit='Pc'; qtyUnitPlural='Pcs';}
+    else {qtyUnit='Sqm'; qtyUnitPlural='Sqm';}
   } else {
     qtyStr=fmtMoney(lc.chargeQty); qtyUnit='Meter'; qtyUnitPlural='Meters';
   }
@@ -1572,6 +1931,10 @@ $('addCartBtn').addEventListener('click',()=>{
   let qtyUnit,qtyUnitPlural;
   if(lc.product==='UV'){qtyUnit='Sheet';qtyUnitPlural='Sheets';}
   else if(lc.product==='WOOD'){qtyUnit='Sqm';qtyUnitPlural='Sqm';}
+  else if(lc.product==='STICKER'){
+    if(stickerUnit==='pc'){qtyUnit='Pc';qtyUnitPlural='Pcs';}
+    else {qtyUnit='Sqm';qtyUnitPlural='Sqm';}
+  }
   else {qtyUnit='Meter';qtyUnitPlural='Meters';}
   cart.push({
     itemName:lc.itemName,
