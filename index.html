@@ -221,7 +221,7 @@
 <div style="max-width:860px;margin:0 auto;">
   <div class="header">
     <span class="header-brand">EVOKE WPC</span>
-    <span class="header-sub">报价计算器 v3.8</span>
+    <span class="header-sub">报价计算器 v3.11</span>
   </div>
 
   <!-- 模式切换 -->
@@ -292,9 +292,26 @@
             <option value="120x12">120×12 墙板</option>
             <option value="112x16">112×16 墙板</option>
             <option value="162x16">162×16 墙板</option>
-            <option value="50x50">50×50 角线</option>
+            <option value="100x50wood">100×50 方木</option>
             <option value="160edge">160 收边线</option>
+            <option value="120edge">120 收边线</option>
+            <option value="50x50">50×50 角线</option>
+            <option value="30x40">30×40 角线</option>
           </select>
+        </div>
+        <div class="field">
+          <label>报价方式</label>
+          <div class="pill-group" id="asaUnitPills">
+            <div class="pill active" data-val="m">Per m</div>
+            <div class="pill" data-val="pc">Per pc</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>3D 浮雕表面处理 (+¥0.5/米)</label>
+          <div class="pill-group" id="asaEmbossPills">
+            <div class="pill active" data-val="no">不做</div>
+            <div class="pill" data-val="yes">做 3D 浮雕</div>
+          </div>
         </div>
         <div id="asaSpecsRow" class="specs-row hidden">
           <div class="spec-item"><div class="spec-label">米重</div><div class="spec-val" id="s_kgpm">—</div></div>
@@ -359,7 +376,7 @@
             <div class="pill" data-val="sqm">Per sqm</div>
           </div>
         </div>
-        <div class="field"><label>毛重 kg/箱 (可选，用于拼柜重量)</label><input id="sticker_kgbox" value="" placeholder="空则不计重量"/></div>
+        <div class="field"><label>毛重 kg/箱 (可选，空则默认按 0.3kg/㎡ 估算)</label><input id="sticker_kgbox" value="" placeholder="空=按0.3kg/㎡估算"/></div>
         <div class="specs-row">
           <div class="spec-item"><div class="spec-label">规格</div><div class="spec-val" id="st_s_spec">—</div></div>
           <div class="spec-item"><div class="spec-label">㎡/张</div><div class="spec-val" id="st_s_sqm">—</div></div>
@@ -595,8 +612,11 @@ const ASA_DATA={
   "120x12":{price:7.8,kgpm:0.59,pw:0.145,ph:0.17,pl:2.9,n:20},
   "112x16":{price:8.6,kgpm:0.68,pw:0.14,ph:0.203,pl:2.9,n:18},
   "162x16":{price:12.0,kgpm:1.00,pw:0.158,ph:0.19,pl:2.9,n:14},
+  "100x50wood":{price:13.5,kgpm:1.30,pw:0.265,ph:0.21,pl:2.9,n:10},
+  "160edge":{price:5.8,kgpm:0.45,pw:0.25,ph:0.115,pl:2.9,n:40},
+  "120edge":{price:5.8,kgpm:0.38,pw:0.17,ph:0.175,pl:2.9,n:40},
   "50x50":{price:6.2,kgpm:0.45,pw:0.14,ph:0.145,pl:2.9,n:30},
-  "160edge":{price:5.8,kgpm:0.45,pw:0.25,ph:0.115,pl:2.9,n:40}
+  "30x40":{price:5.8,kgpm:0.31,pw:0.13,ph:0.10,pl:2.9,n:30}
 };
 const EVOKE_LOGO_SRC='data:image/jpeg;base64,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4XN9mh4Xu4nDgGHHvPeVDPZtWdGNKUl6qaWnVY6ncbmMZuaXF5+OTn+poH2qKa3Nb+g1ssdRBjlG8EcbfuPwXRmnZeJoIJmhs0TJGg5Ac0ED4rIBjkrVpZejVJyT0eMLpjP10IqtbtIpY1X5/AREV8gCIiAIiIAiIgCEZGERAV24wVNnqXV9EOKmccyxdg8fLx7FL2y4U1fD1kD9x9Zh+s3zW04AjBVduljmhmNbaXOjkG5jDsfD8uSzp06trJzpLMXxXTvX0LClGqsT0fX6ljK5ze4Hi91bMOJdMS0Ac8nP4qeotTmJ3U3OmlY9uxcG7jzb+S+3COluNbT19vnimeHt6yMPAJAPPdUtobl9Sj2b1T4c/cTW+9Qm95aM9WjS8UT2T1j2zkDPVcPug+PerHGxsbQxjQ1o5ADAC+g7JkLVt7Wlbx3aawValWdR5kz6iZXl72saXPcGgcyTgKzkjPSEgKJrtQW6mBDZeveM+7Hv8+SjWVF1vji2JppaM83d/fvzPoqdW9hF7sPWl0RLGjJ6vRElX3NzpvZLc0TTu2Lhu1nie9bluoxSRYLzJK7eSR3NxXy20FPQwdXC3c/Wcebj4rbXVGlNvtKvHpyX51PJSXsx4BERWiMIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIDUuFuo65nDUwNeRydycPVV+t0meLio6kEDk2UfiFa0VataUa2s46kkK04cGUgW/UFI7EXtBA/9KXI+GVkbNqVu2Kzbvjz+CuaKt/jkvZm15kvpLfGKKaDqWbI/TB6Bq9RWC6VTiaucNHe+QvI9FcEXS2dB+3JvzPPSJL2UkQ1Bp2hpyHTcVS8HPv8A1fh+amGtDRgAADsX1Fcp0YUliCwQynKTzJhERSHIREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQH//Z';
 // UV板：price含税采购价/张，qty=整柜20GP装柜数，kg=每张重量，perPallet=每托张数
@@ -747,6 +767,8 @@ let rebatePct=0, userOverrideRebate=false;
 let genIsMulti=false;   // false=单品 true=多品
 let genDocType='quote'; // 'quote' | 'pi'
 let stickerMaterial='PVC', stickerSeries='pvc_plain', stickerSpec='60x3', stickerFilm='23s', stickerUnit='pc';
+let asaUnit='m';         // 'm'|'pc' - ASA 按米还是按支卖
+let asaEmboss=false;     // 是否加3D浮雕(+¥0.5/m)
 
 const $=id=>document.getElementById(id);
 const flo=x=>Math.floor(x>0?x:0);
@@ -811,6 +833,7 @@ document.querySelectorAll('#productPills .pill').forEach(p=>p.addEventListener('
   // 切到墙贴时自动填价
   if(product==='STICKER') syncStickerFields();
   else if(product==='UV') syncUVFields();
+  else if(product==='ASA') applyAsaModel();
   calc();
 }));
 
@@ -832,21 +855,58 @@ document.querySelectorAll('.ctag').forEach(c=>c.addEventListener('click',()=>{
 }));
 
 // ====== ASA 型号 ======
-$('asaModel').addEventListener('change',()=>{
+// 按当前型号/单位/浮雕计算实际每米含税价
+function getAsaEffectivePrice(key){
+  const d=ASA_DATA[key];
+  if(!d) return 0;
+  return d.price + (asaEmboss?0.5:0);
+}
+function applyAsaModel(){
   const key=$('asaModel').value;
   if(!key){$('asaSpecsRow').classList.add('hidden');return;}
   const d=ASA_DATA[key];
-  $('exTax').value=d.price; $('vol_L').value=d.pl;
+  const effPerM=getAsaEffectivePrice(key); // 含浮雕加价
+  // exTax填入：按米 → 每米价; 按支 → 每米价 × 支长
+  if(asaUnit==='m'){
+    $('exTax').value=effPerM.toFixed(2);
+  } else {
+    $('exTax').value=(effPerM*d.pl).toFixed(2);
+  }
+  $('vol_L').value=d.pl;
   $('vol_Pw').value=d.pw; $('vol_Ph').value=d.ph; $('vol_N').value=d.n;
   $('vol_kgpm').value=d.kgpm;
   $('s_kgpm').textContent=d.kgpm+'kg/m';
   $('s_pack').textContent=(d.pw*100).toFixed(1)+'×'+(d.ph*100).toFixed(1)+'cm';
   $('s_n').textContent=d.n+'支';
-  $('s_price').textContent='¥'+d.price+'/m';
+  // 规格展示的价格
+  if(asaUnit==='m'){
+    $('s_price').textContent='¥'+effPerM.toFixed(2)+'/m'+(asaEmboss?' (含浮雕)':'');
+  } else {
+    $('s_price').textContent='¥'+(effPerM*d.pl).toFixed(2)+'/pc'+(asaEmboss?' (含浮雕)':'');
+  }
   $('asaSpecsRow').classList.remove('hidden');
+}
+$('asaModel').addEventListener('change',()=>{
   userOverrideRebate=false;
+  applyAsaModel();
   calc();
 });
+document.querySelectorAll('#asaUnitPills .pill').forEach(p=>p.addEventListener('click',()=>{
+  document.querySelectorAll('#asaUnitPills .pill').forEach(x=>x.classList.remove('active'));
+  p.classList.add('active');
+  asaUnit=p.dataset.val;
+  userOverrideRebate=false;
+  applyAsaModel();
+  calc();
+}));
+document.querySelectorAll('#asaEmbossPills .pill').forEach(p=>p.addEventListener('click',()=>{
+  document.querySelectorAll('#asaEmbossPills .pill').forEach(x=>x.classList.remove('active'));
+  p.classList.add('active');
+  asaEmboss=(p.dataset.val==='yes');
+  userOverrideRebate=false;
+  applyAsaModel();
+  calc();
+}));
 
 // ====== 墙贴 ======
 function rebuildStickerSeriesOptions(){
@@ -1010,7 +1070,8 @@ function updateProductUI(){
   // 出厂价标签
   let exLabel;
   if(p==='UV') exLabel='含税出厂价 (RMB/张)';
-  else if(p==='ASA'||p==='WPC') exLabel='含税出厂价 (RMB/m)';
+  else if(p==='ASA') exLabel=asaUnit==='pc'?'含税出厂价 (RMB/支)':'含税出厂价 (RMB/m)';
+  else if(p==='WPC') exLabel='含税出厂价 (RMB/m)';
   else if(p==='WOOD') exLabel='含税出厂价 (RMB/㎡)';
   else if(p==='STICKER') exLabel=stickerUnit==='pc'?'含税出厂价 (RMB/片)':'含税出厂价 (RMB/㎡)';
   $('exTaxLabel').textContent=exLabel;
@@ -1018,6 +1079,7 @@ function updateProductUI(){
   let metersLabel='每柜总米数';
   if(p==='UV') metersLabel='装柜张数';
   else if(p==='WOOD') metersLabel='总平方米';
+  else if(p==='ASA'&&asaUnit==='pc') metersLabel='装柜支数';
   else if(p==='STICKER') metersLabel=stickerUnit==='pc'?'装柜张数':'装柜总㎡';
   $('lblMeters').textContent=metersLabel;
 }
@@ -1031,7 +1093,8 @@ function applyMode(){
   $('impliedKpiGrid').classList.toggle('hidden',mode!=='reverse');
   $('statusBadge').classList.toggle('hidden',mode!=='reverse');
   // 反推模式的目标价单位
-  const targetUnits={UV:'USD/张',ASA:'USD/m',WPC:'USD/m',WOOD:'USD/㎡',
+  const targetUnits={UV:'USD/张',ASA:asaUnit==='pc'?'USD/pc':'USD/m',
+    WPC:'USD/m',WOOD:'USD/㎡',
     STICKER:stickerUnit==='pc'?'USD/pc':'USD/㎡'};
   $('targetLabel').textContent=`目标 FOB 单价 (${targetUnits[product]})`;
   // 价格区标题
@@ -1073,8 +1136,14 @@ function calc(){
     const L=nval('vol_L')||2.9, Pw=nval('vol_Pw')||0.23, Ph=nval('vol_Ph')||0.21, N=nval('vol_N')||8;
     const nL=flo(C.L/L);
     const packs=Math.max(nL*flo(C.W/Pw)*flo(C.H/Ph), nL*flo(C.W/Ph)*flo(C.H/Pw));
-    totalPCS=packs*N; totalMeters=totalPCS*L; chargeQty=totalMeters;
-    unitLabel='/m'; palletCost=0;
+    totalPCS=packs*N; totalMeters=totalPCS*L;
+    // ASA按支卖时，计价单位=支数；其他情况=总米数
+    if(p==='ASA' && asaUnit==='pc'){
+      chargeQty=totalPCS; unitLabel='/pc';
+    } else {
+      chargeQty=totalMeters; unitLabel='/m';
+    }
+    palletCost=0;
   }
   else if(p==='WOOD'){
     const L=+$('wood_L').value, thk=+$('wood_thk').value, den=+$('wood_den').value;
@@ -1170,6 +1239,8 @@ function calc(){
     } else {
       $('metersOut').innerHTML=totalSqm>0?fmtN(totalSqm)+'<span class="kpi-unit">㎡</span>':'—';
     }
+  } else if(p==='ASA' && asaUnit==='pc'){
+    $('metersOut').innerHTML=totalPCS>0?fmtN(totalPCS)+'<span class="kpi-unit">支</span>':'—';
   } else {
     $('metersOut').innerHTML=totalMeters>0?fmtN(totalMeters)+'<span class="kpi-unit">m</span>':'—';
   }
@@ -1291,12 +1362,18 @@ function cacheLastCalc(){
     const kgpm=nval('vol_kgpm')||0;
     const nL=flo(C.L/L);
     const packs=Math.max(nL*flo(C.W/Pw)*flo(C.H/Ph),nL*flo(C.W/Ph)*flo(C.H/Pw));
-    totalPCS=packs*N; totalMeters=totalPCS*L; chargeQty=totalMeters;
+    totalPCS=packs*N; totalMeters=totalPCS*L;
     const asaModel=$('asaModel').value;
     if(p==='ASA'){
-      itemName='ASA Outdoor Wall Panel';
+      if(asaUnit==='pc'){
+        chargeQty=totalPCS;
+      } else {
+        chargeQty=totalMeters;
+      }
+      itemName='ASA Outdoor Wall Panel'+(asaEmboss?' (3D Embossed)':'');
       specification=asaModel?`${asaModel}mm, L=${L}m`:`L=${L}m`;
     } else {
+      chargeQty=totalMeters;
       itemName='WPC Wall Panel';
       const wpcW=$('wpc_W').value.trim();
       const wpcT=$('wpc_T').value.trim();
@@ -1306,8 +1383,12 @@ function cacheLastCalc(){
       else if(wpcT) dimPart=`T=${wpcT}mm, `;
       specification=`${dimPart}L=${L}m`;
     }
+    // 每米体积 = 包装宽 × 包装高 / 每包支数
     perUnitCbm=Pw*Ph/N;
+    // ASA按支卖时，单位体积要乘以单支长度
+    if(p==='ASA' && asaUnit==='pc') perUnitCbm=perUnitCbm*L;
     perUnitKg=kgpm;
+    if(p==='ASA' && asaUnit==='pc') perUnitKg=kgpm*L;
   } else if(p==='WOOD'){
     const L=+$('wood_L').value,thk=+$('wood_thk').value,den=+$('wood_den').value;
     const kgPS=1.22*L*(thk/1000)*den;
@@ -1331,17 +1412,19 @@ function cacheLastCalc(){
     totalSqm=totalPCS*sp.sqm;
     chargeQty=stickerUnit==='pc'?totalPCS:totalSqm;
     itemName=series.label;
-    specification=`${sp.label}, ${sp.thk}mm${sp.films.length>1?', '+stickerFilm+' film':''}`;
+    specification=`${sp.label}, ${sp.thk}mm`;
     // 每单位(pc或㎡)占的CBM
     const perPcCbm=sp.boxCbm/sp.perBox;
     perUnitCbm=stickerUnit==='pc'?perPcCbm:perPcCbm/sp.sqm;
-    // 重量由用户手填
+    // 重量：优先用用户填的kg/箱，其次按0.3kg/㎡默认密度估算
     const kgBox=nval('sticker_kgbox');
     if(kgBox>0){
       const perPcKg=kgBox/sp.perBox;
       perUnitKg=stickerUnit==='pc'?perPcKg:perPcKg/sp.sqm;
     } else {
-      perUnitKg=0;
+      // 默认 0.3 kg/㎡
+      const DEFAULT_KG_PER_SQM=0.3;
+      perUnitKg=stickerUnit==='pc'?DEFAULT_KG_PER_SQM*sp.sqm:DEFAULT_KG_PER_SQM;
     }
   }
   const exFactoryCost=exTax*chargeQty;
@@ -1541,6 +1624,8 @@ function buildQuotation(cust, seller, docType){
     qtyStr=fmtMoney(lc.chargeQty);
     if(stickerUnit==='pc'){qtyUnit='Pc'; qtyUnitPlural='Pcs';}
     else {qtyUnit='Sqm'; qtyUnitPlural='Sqm';}
+  } else if(lc.product==='ASA' && asaUnit==='pc'){
+    qtyStr=fmtMoney(lc.chargeQty); qtyUnit='Pc'; qtyUnitPlural='Pcs';
   } else {
     qtyStr=fmtMoney(lc.chargeQty); qtyUnit='Meter'; qtyUnitPlural='Meters';
   }
@@ -1935,6 +2020,7 @@ $('addCartBtn').addEventListener('click',()=>{
     if(stickerUnit==='pc'){qtyUnit='Pc';qtyUnitPlural='Pcs';}
     else {qtyUnit='Sqm';qtyUnitPlural='Sqm';}
   }
+  else if(lc.product==='ASA' && asaUnit==='pc'){qtyUnit='Pc';qtyUnitPlural='Pcs';}
   else {qtyUnit='Meter';qtyUnitPlural='Meters';}
   cart.push({
     itemName:lc.itemName,
