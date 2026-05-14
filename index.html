@@ -221,7 +221,7 @@
 <div style="max-width:860px;margin:0 auto;">
   <div class="header">
     <span class="header-brand">EVOKE WPC</span>
-    <span class="header-sub">报价计算器 v3.18</span>
+    <span class="header-sub">报价计算器 v3.22</span>
   </div>
 
   <!-- 模式切换 -->
@@ -549,6 +549,39 @@
       </div>
     </div>
 
+    <!-- 文档选项：Payment Term + Incoterms + Price列标签 + DDP Cost -->
+    <div class="modal-title" style="margin-top:20px;" id="docOptionsTitle">Document Options</div>
+    <div class="field" id="priceLabelField">
+      <label>Price Column (表头价格列名)</label>
+      <select id="priceLabelSel">
+        <option value="FOB" selected>FOB Price</option>
+        <option value="EXW">EXW Price</option>
+      </select>
+    </div>
+    <div class="field" id="incotermsField">
+      <label>Incoterms (贸易条款行)</label>
+      <select id="incotermsSel">
+        <option value="FOB" selected>FOB Qingdao, China</option>
+        <option value="EXW">EXW Linyi, Shandong, China</option>
+        <option value="DDP">DDP (destination)</option>
+      </select>
+    </div>
+    <div class="field hidden" id="ddpDestField">
+      <label>DDP Destination (目的地城市/国家)</label>
+      <input id="ddpDestInput" placeholder="e.g. Los Angeles, USA"/>
+    </div>
+    <div class="field" id="paymentTermField">
+      <label>Payment Term</label>
+      <select id="paymentTermSel">
+        <option value="advance">100% payment in advance by T/T.</option>
+        <option value="deposit" selected>30% deposit + 70% balance by T/T</option>
+      </select>
+    </div>
+    <div class="field" id="ddpCostField">
+      <label>DDP Cost (optional, USD) — for LCL/拼箱 shipments</label>
+      <input id="ddpCostInput" type="number" step="any" min="0" placeholder="空则不显示DDP行"/>
+    </div>
+
     <div class="modal-title" style="margin-top:20px;">Seller Information (From)</div>
     <div class="field"><label>Sales Rep Name *</label><input id="sellerName" placeholder="e.g. Lance"/></div>
     <div class="field"><label>Tel *</label><input id="sellerTel" placeholder="e.g. +86 137 9297 7082"/></div>
@@ -781,6 +814,11 @@ let stickerMaterial='PVC', stickerSeries='pvc_plain', stickerSpec='60x3', sticke
 let asaUnit='m';         // 'm'|'pc' - ASA 按米还是按支卖
 let asaEmboss=false;     // 是否加3D浮雕(+¥0.5/m)
 let singleItemPhoto=null;  // 单品图（base64 DataURL）
+let docPaymentTerm='deposit'; // 'advance' | 'deposit'
+let docDdpCost=0;            // DDP 运费总额（USD），0=不显示
+let docPriceLabel='FOB';    // 'FOB' | 'EXW' - 表头价格列名
+let docIncoterms='FOB';     // 'FOB' | 'EXW' | 'DDP' - Trade Terms里的Incoterms
+let docDdpDest='';          // DDP 目的地
 
 const $=id=>document.getElementById(id);
 const flo=x=>Math.floor(x>0?x:0);
@@ -1532,6 +1570,13 @@ function openCustomerModal(isMulti, docType){
   $('sellerEmail').value=s.email;
   // 单品时显示单图上传区，多品时隐藏（用购物车里的逐项图）
   $('singlePhotoField').style.display=isMulti?'none':'block';
+  // Payment Term 所有文档都显示
+  $('paymentTermField').style.display='block';
+  // DDP Cost 在 Quotation/PI 显示，Price List 不显示（单价表无 total）
+  $('ddpCostField').style.display=(docType==='pricelist')?'none':'block';
+  // DDP 目的地框：根据当前 Incoterms 选择决定
+  $('ddpDestField').classList.toggle('hidden',$('incotermsSel').value!=='DDP');
+  $('docOptionsTitle').style.display='block';
   $('custModal').classList.remove('hidden');
 }
 
@@ -1551,6 +1596,11 @@ $('singlePhotoClear').addEventListener('click',()=>{
   singleItemPhoto=null;
   $('singlePhotoInput').value='';
   $('singlePhotoPreview').style.display='none';
+});
+
+// Incoterms 选 DDP 时显示目的地输入框
+$('incotermsSel').addEventListener('change',()=>{
+  $('ddpDestField').classList.toggle('hidden',$('incotermsSel').value!=='DDP');
 });
 
 // 生成报价单按钮（单品 Quotation）
@@ -1576,6 +1626,12 @@ $('custOk').addEventListener('click',()=>{
     return;
   }
   saveSeller({name:sellerName,tel:sellerTel,email:sellerEmail});
+  // 读取文档选项
+  docPaymentTerm=$('paymentTermSel').value;
+  docDdpCost=parseFloat($('ddpCostInput').value)||0;
+  docPriceLabel=$('priceLabelSel').value;
+  docIncoterms=$('incotermsSel').value;
+  docDdpDest=$('ddpDestInput').value.trim();
   $('custModal').classList.add('hidden');
   const custInfo={
     company, attn,
@@ -1645,13 +1701,29 @@ function getDocMeta(docType){
 }
 
 // 生成Trade Terms区HTML（报价单用）
-function renderTradeTermsQuote(incoterm){
+// 根据 docPaymentTerm 返回付款条款文案
+function getPaymentTermText(){
+  return docPaymentTerm==='advance'
+    ? '100% payment in advance by T/T.'
+    : '30% deposit by T/T before production, and 70% balance by T/T before shipment. Shipment will be arranged only after the full payment is received.';
+}
+// 根据 docIncoterms 返回 Incoterms 完整文案
+function getIncotermsText(){
+  if(docIncoterms==='EXW') return 'EXW Linyi, Shandong, China';
+  if(docIncoterms==='DDP') return docDdpDest?('DDP '+docDdpDest):'DDP (destination)';
+  return 'FOB Qingdao, China';
+}
+function renderTradeTermsQuote(incoterm, showLoading){
+  const loadingRow=showLoading
+    ? `<div class="row"><div class="k">Loading:</div><div>Mixed container available; quantity adjustable per customer's requirement</div></div>`
+    : '';
   return `
     <div class="quote-terms">
       <h4>Trade Terms</h4>
       <div class="row"><div class="k">Incoterms:</div><div>${incoterm}</div></div>
-      <div class="row"><div class="k">Payment Terms:</div><div>30% T/T deposit, 70% balance against copy of B/L</div></div>
+      <div class="row" style="align-items:start;"><div class="k">Payment Terms:</div><div>${getPaymentTermText()}</div></div>
       <div class="row"><div class="k">Packing:</div><div>Standard export packing, suitable for ocean transportation</div></div>
+      ${loadingRow}
       <div class="row"><div class="k">Validity:</div><div>15 days from quotation date</div></div>
       <div class="row"><div class="k">Remarks:</div><div>Prices are for reference; subject to final confirmation based on quantity, color, packing, and freight.</div></div>
     </div>
@@ -1659,13 +1731,18 @@ function renderTradeTermsQuote(incoterm){
 }
 // 生成Trade Terms区HTML（PI用，带银行信息）
 function renderTradeTermsPi(incoterm){
+  const paymentText=getPaymentTermText();
+  // production time 文案：100%预付时改成"收到全款后"
+  const productionText=docPaymentTerm==='advance'
+    ? '2 weeks after receiving the payment.'
+    : '2 weeks after receiving the deposit.';
   return `
     <div class="quote-terms">
       <h4>Trade Terms</h4>
       <div class="row"><div class="k">1. Incoterms:</div><div>${incoterm}</div></div>
       <div class="row"><div class="k">2. Packing:</div><div>Standard export packing, suitable for ocean transportation</div></div>
-      <div class="row"><div class="k">3. Production time:</div><div>2 weeks after receiving the deposit.</div></div>
-      <div class="row"><div class="k">4. Payment:</div><div>30% T/T deposit, 70% balance before shipment.</div></div>
+      <div class="row"><div class="k">3. Production time:</div><div>${productionText}</div></div>
+      <div class="row" style="align-items:start;"><div class="k">4. Payment:</div><div>${paymentText}</div></div>
       <div class="row" style="align-items:start;"><div class="k">5. Bank detail:</div><div>${BANK_INFO_HTML}</div></div>
     </div>
   `;
@@ -1673,12 +1750,11 @@ function renderTradeTermsPi(incoterm){
 
 function buildQuotation(cust, seller, docType){
   const lc=lastCalc;
-  const isExw=lc.mode==='exw';
   const meta=getDocMeta(docType);
   // 记录PDF文件名
   pdfFileName=sanitizeFileName(`${lc.itemName} ${meta.filePrefix} to ${cust.company} - EvokeWPC`);
-  const incoterm=isExw?'EXW Linyi, Shandong, China':'FOB Qingdao, China';
-  const tradeLabel=isExw?'EXW':'FOB';
+  const incoterm=getIncotermsText();    // Trade Terms 里的 Incoterms 行
+  const tradeLabel=docPriceLabel;       // 表头价格列名（FOB/EXW）
   let qtyStr,qtyUnit,qtyUnitPlural;
   if(lc.product==='UV'){
     qtyStr=fmtMoney(lc.chargeQty); qtyUnit='Sheet'; qtyUnitPlural='Sheets';
@@ -1747,18 +1823,27 @@ function buildQuotation(cust, seller, docType){
         </tr>
       </tbody>
       ${docType==='pricelist'?'':`<tfoot>
+        ${docDdpCost>0?`
         <tr>
-          <td colspan="${singleItemPhoto?6:5}" style="text-align:right;">TOTAL:</td>
+          <td colspan="${singleItemPhoto?6:5}" style="text-align:right;">Subtotal (${docPriceLabel}):</td>
           <td class="num">USD ${fmtMoney(lc.fobUsdTotal)}</td>
         </tr>
-        ${docType==='pi'?`
+        <tr>
+          <td colspan="${singleItemPhoto?6:5}" style="text-align:right;">DDP Cost:</td>
+          <td class="num">USD ${fmtMoney(docDdpCost)}</td>
+        </tr>`:''}
+        <tr>
+          <td colspan="${singleItemPhoto?6:5}" style="text-align:right;">TOTAL:</td>
+          <td class="num">USD ${fmtMoney(lc.fobUsdTotal+docDdpCost)}</td>
+        </tr>
+        ${(docType==='pi'&&docPaymentTerm==='deposit')?`
         <tr>
           <td colspan="${singleItemPhoto?6:5}" style="text-align:right;">30% Deposit:</td>
-          <td class="num">USD ${fmtMoney(lc.fobUsdTotal*0.3)}</td>
+          <td class="num">USD ${fmtMoney((lc.fobUsdTotal+docDdpCost)*0.3)}</td>
         </tr>
         <tr>
           <td colspan="${singleItemPhoto?6:5}" style="text-align:right;">70% Balance:</td>
-          <td class="num">USD ${fmtMoney(lc.fobUsdTotal*0.7)}</td>
+          <td class="num">USD ${fmtMoney((lc.fobUsdTotal+docDdpCost)*0.7)}</td>
         </tr>`:''}
       </tfoot>`}
     </table>
@@ -1811,10 +1896,8 @@ function buildMultiQuotation(cust, seller, docType){
   // 判断是否全部有数量（决定是否显示总额）
   const allHaveQty=cart.every(it=>it.qty>0);
   const total=allHaveQty?cart.reduce((s,it)=>s+it.qty*it.unitPrice,0):0;
-  // 判断是否全部是 EXW（混合不支持，默认 FOB）
-  const allExw=cart.every(it=>it.tradeMode==='exw');
-  const tradeLabel=allExw?'EXW':'FOB';
-  const incoterm=allExw?'EXW Linyi, Shandong, China':'FOB Qingdao, China';
+  const tradeLabel=docPriceLabel;       // 表头价格列名（FOB/EXW）
+  const incoterm=getIncotermsText();    // Trade Terms 里的 Incoterms 行
 
   // 判断是否任意 item 有 photo
   const anyPhoto=cart.some(it=>it.photo);
@@ -1836,20 +1919,30 @@ function buildMultiQuotation(cust, seller, docType){
 
   // 计算 colspan：基础5列，有photo列+1
   const colspanForTotal=showPhoto?6:5;
+  const grandTotal=total+docDdpCost;
   const totalRow=(!isPriceList && allHaveQty)?`
     <tfoot>
+      ${docDdpCost>0?`
       <tr>
-        <td colspan="${colspanForTotal}" style="text-align:right;">TOTAL:</td>
+        <td colspan="${colspanForTotal}" style="text-align:right;">Subtotal (${docPriceLabel}):</td>
         <td class="num">USD ${fmtMoney(total)}</td>
       </tr>
-      ${docType==='pi'?`
+      <tr>
+        <td colspan="${colspanForTotal}" style="text-align:right;">DDP Cost:</td>
+        <td class="num">USD ${fmtMoney(docDdpCost)}</td>
+      </tr>`:''}
+      <tr>
+        <td colspan="${colspanForTotal}" style="text-align:right;">TOTAL:</td>
+        <td class="num">USD ${fmtMoney(grandTotal)}</td>
+      </tr>
+      ${(docType==='pi'&&docPaymentTerm==='deposit')?`
       <tr>
         <td colspan="${colspanForTotal}" style="text-align:right;">30% Deposit:</td>
-        <td class="num">USD ${fmtMoney(total*0.3)}</td>
+        <td class="num">USD ${fmtMoney(grandTotal*0.3)}</td>
       </tr>
       <tr>
         <td colspan="${colspanForTotal}" style="text-align:right;">70% Balance:</td>
-        <td class="num">USD ${fmtMoney(total*0.7)}</td>
+        <td class="num">USD ${fmtMoney(grandTotal*0.7)}</td>
       </tr>`:''}
     </tfoot>
   `:'';
@@ -1900,15 +1993,7 @@ function buildMultiQuotation(cust, seller, docType){
     </table>
     ${docType==='pi'
       ? renderTradeTermsPi(incoterm)
-      : `<div class="quote-terms">
-      <h4>Trade Terms</h4>
-      <div class="row"><div class="k">Incoterms:</div><div>${incoterm}</div></div>
-      <div class="row"><div class="k">Payment Terms:</div><div>30% T/T deposit, 70% balance against copy of B/L</div></div>
-      <div class="row"><div class="k">Packing:</div><div>Standard export packing, suitable for ocean transportation</div></div>
-      <div class="row"><div class="k">Loading:</div><div>Mixed container available; quantity adjustable per customer's requirement</div></div>
-      <div class="row"><div class="k">Validity:</div><div>15 days from quotation date</div></div>
-      <div class="row"><div class="k">Remarks:</div><div>Prices are for reference; subject to final confirmation based on quantity, color, packing, and freight.</div></div>
-    </div>`
+      : renderTradeTermsQuote(incoterm, true)
     }
     <div class="quote-footer">
       ${docType==='pi'?'<div></div>':`<div>
